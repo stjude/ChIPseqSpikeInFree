@@ -4,7 +4,7 @@
 \alias{BoxplotSF}
 \title{This function generates boxplot using sacaling factor table. It's been included in the last step of ChIPseqSpikeFree().}
 \usage{
-BoxplotSF(input = meta.SF, prefix = prefix)
+BoxplotSF(input, prefix = "test")
 }
 \arguments{
 \item{input}{a file/data.frame generated/returned by CalculateSF() or ChIPseqSpikeFree(). 
@@ -20,9 +20,9 @@ This function generates boxplot using sacaling factor table. It's been included 
 }
 \examples{
 ##1. re-generate boxplot of ChIPseqSpikeFree scaling factors
-# After you run ChIPseqSipkeFree(), a sacaling factor table 
-#(for example, test_SF.txt) will be generated. 
+## After you run ChIPseqSipkeFree(), a sacaling factor table 
+##(for example, test_SF.txt) will be generated. 
 
-BoxplotSF(input="test_SF.txt",prefix="test") 
+#BoxplotSF(input="test_SF.txt",prefix="test") 
 
 }

@@ -4,8 +4,8 @@
 \alias{ChIPseqSpikeFree}
 \title{wrapper function - perform ChIP-seq spike-free normalization in one step.}
 \usage{
-ChIPseqSpikeFree(bamFiles = bams, chromFile = chrom.size,
-  metaFile = metaFile, prefix = prefix)
+ChIPseqSpikeFree(bamFiles, chromFile = "hg19",
+  metaFile = "sample_meta.txt", prefix = "test")
 }
 \arguments{
 \item{bamFiles}{a vector of bam filenames.}
@@ -26,18 +26,18 @@ The correct way is to combine bamFiles parameter and create a new metadata file 
 }
 \examples{
 ##1 first You need to generate a sample_meta.txt (tab-delimited txt file).
-metaFile <- "your/path/sample_meta.txt"
-meta <- ReadMeta(metaFile)
-head(meta)
-ID    ANTIBODY    GROUP
-ChIPseq1.bam  H3K27me3    WT
-ChIPseq2.bam  H3K27me3    K27M
+#metaFile <- "your/path/sample_meta.txt"
+#meta <- ReadMeta(metaFile)
+#head(meta)
+#ID ANTIBODY GROUP
+#ChIPseq1.bam H3K27me3 WT
+#ChIPseq2.bam H3K27me3 K27M
 
 ##2. bam files 
-bams <- c("ChIPseq1.bam","ChIPseq2.bam")
-prefix <- "test"
+#bams <- c("ChIPseq1.bam","ChIPseq2.bam")
+#prefix <- "test"
 
 ##3. run ChIPseqSpikeFree pipeline  
-ChIPseqSpikeFree(bamFiles=bams, chromFile="mm9",metaFile=metaFile,prefix="test")
+#ChIPseqSpikeFree(bamFiles=bams, chromFile="mm9",metaFile=metaFile,prefix="test")
 
 }

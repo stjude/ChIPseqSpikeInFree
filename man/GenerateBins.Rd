@@ -4,15 +4,14 @@
 \alias{GenerateBins}
 \title{generate genome-wide bins for counting purpose}
 \usage{
-GenerateBins(chromFile = input, binSize = 1000, overlap = 0,
-  withChr = TRUE)
+GenerateBins(chromFile, binSize = 1000, overlap = 0, withChr = TRUE)
 }
 \arguments{
 \item{chromFile}{chrom.size. Given "hg19","mm10","mm9" or "hg38", will load chrom.size file from package folder.}
 
 \item{binSize}{size of bins (bp)}
 
-\item{overlap}{overlaps between two adjacent bins (bp)}
+\item{overlap}{overlaps between two consecutive bins (bp)}
 
 \item{withChr}{chromosome names in bin File have chr if set withChr to TRUE; FALSE - no chr}
 }
@@ -24,19 +23,17 @@ Given a chrom.size file, this function allows you to generate a your own sliding
 }
 \examples{
 ##1. generate a mm10 binFile without chr and use a binSize of 1000 bp 
-##and overlap of 500 bp between two adjacent bins
+##and overlap of 500 bp between two consecutive bins
 
- chromFile <- "mm10" 
-# will be parsed as system.file("extdata", "mm10.chrom.sizes", package = "ChIPseqSpikeFree")
- binDF <- GenerateBins(chromFile=chromFile,binSize=1000, overlap=500,
- withChr=FALSE,prefix="mm10")
+##"mm10" will be parsed as system.file("extdata", "mm10.chrom.sizes", package = "ChIPseqSpikeFree")
+# binDF <- GenerateBins(chromFile="mm10",binSize=1000, overlap=500,
+# withChr=FALSE,prefix="mm10")
 
 ##2. generate a hg19 binFile with chr and use a binSize of 2000 bp 
 
- chromFile <- "hg19" 
-# will be parsed as system.file("extdata", "hg19.chrom.sizes", package = "ChIPseqSpikeFree")
- binDF<- GenerateBins(chromFile=chromFile,binSize=2000, overlap=0,
- withChr=TRUE,prefix="hg19")
+## "hg19" will be parsed as system.file("extdata", "hg19.chrom.sizes", package = "ChIPseqSpikeFree")
+# binDF<- GenerateBins(chromFile="hg19",binSize=2000, overlap=0,
+# withChr=TRUE,prefix="hg19")
 
 
 

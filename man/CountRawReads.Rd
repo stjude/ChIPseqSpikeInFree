@@ -4,17 +4,17 @@
 \alias{CountRawReads}
 \title{count raw reads for all bins}
 \usage{
-CountRawReads(bamFiles = bams, chromFile = input, prefix = prefix,
+CountRawReads(bamFiles, chromFile = "hg19", prefix = "test",
   singleEnd = TRUE)
 }
 \arguments{
+\item{bamFiles}{a vector of bam filenames.}
+
 \item{chromFile}{a chrom.size file. Given "hg19","mm10","mm9" or "hg38", will load chrom.size file from package folder. Otherwise, give a /your/path/chrom.size}
 
 \item{prefix}{prefix of output file name}
 
 \item{singleEnd}{To count paired-end reads, set argument singleEnd=FALSE}
-
-\item{bamfiles}{a vector of bam filenames.}
 }
 \value{
 a data.frame of raw counts for each bin
@@ -24,7 +24,7 @@ This function counts raw reads for each bin.
 }
 \examples{
 ##1.count reads using mm9 bams 
-bams <- c("your/path/ChIPseq1.bam","your/path/ChIPseq2.bam")
-rawCountDF <- CountRawReads(bamFiles=bams,chromFile="mm9",prefix="your/path/test",singleEnd=TRUE)
+#bams <- c("your/path/ChIPseq1.bam","your/path/ChIPseq2.bam")
+#rawCountDF <- CountRawReads(bamFiles=bams,chromFile="mm9",prefix="your/path/test",singleEnd=TRUE)
 
 }

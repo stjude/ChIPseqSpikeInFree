@@ -4,7 +4,7 @@
 \alias{CalculateSF}
 \title{calculate scaling factors and save results}
 \usage{
-CalculateSF(data = data, metaFile = meta, prefix = prefix,
+CalculateSF(data, metaFile = "sample_meta.txt", prefix = "test",
   dataRange = c(0.1, 0.99))
 }
 \arguments{
@@ -28,18 +28,18 @@ The correct way is to combine bamFiles parameter and create a new metadata file 
 \examples{
 ##1. start from a parsedMatrix file
 
-parsedMatrixFile <- "your/path/test_parsedMatrix.txt"
-metaFile <- "your/path/sample_meta.txt"
-parsedDF <- read.table(parsedMatrixFile, sep="\\t",header=TRUE,fill=TRUE,
- quote="",row.names=NULL ,check.names=F)
-res <- CalculateSF (data=parsedDF,metaFile=metaFile, prefix="your/path/test")
+#parsedMatrixFile <- "your/path/test_parsedMatrix.txt"
+#metaFile <- "your/path/sample_meta.txt"
+#parsedDF <- read.table(parsedMatrixFile, sep="\\t",header=TRUE,fill=TRUE,
+# quote="",row.names=NULL ,check.names=F)
+#res <- CalculateSF (data=parsedDF,metaFile=metaFile, prefix="your/path/test")
 
 ##2. start from a rawCount file
 
-metaFile <- "your/path/sample_meta.txt"
-parsedDF <- ParseReadCounts(data="your/path/test_rawCounts.txt", metaFile=metaFile, 
-     prefix="your/path/test_parsedMatrix.txt")
-res <- CalculateSF (data=parsedDF,metaFile=metaFile, 
-     prefix="your/path/test")
+#metaFile <- "your/path/sample_meta.txt"
+#parsedDF <- ParseReadCounts(data="your/path/test_rawCounts.txt", metaFile=metaFile, 
+#     prefix="your/path/test_parsedMatrix.txt")
+#res <- CalculateSF (data=parsedDF,metaFile=metaFile, 
+#     prefix="your/path/test")
 
 }
