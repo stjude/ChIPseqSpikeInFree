@@ -1,0 +1,19 @@
+Package: ChIPseqSpikeFree
+Title: A spike-in free ChIP-Seq normalization approach for detecting global changes in histone modifications
+Version: 1.0.7
+Authors@R: 
+    person(given = "Hongjian",
+           family = "Jin",
+           role = c("aut", "cre"),
+           email = "hongjian.jin@stjude.org")
+Description:The detection of global histone modification changes can be addressed using exogenous reference Spike-in controls. However, many thousands of ChIP-seq data available in public depositories nowadays were done without including Spike-in procedure. In order to do quantitative comparisons between these data, researchers have to regenerate whole data set using spike-in ChIP-seq protocols – this is an infeasible solution sometime. A basic scaling factor calculation for these scenarios remains a problem with surprisingly few solutions presented so far.We pesent ChIPseqSpikeFree , a simple ChIP-seq normalization method to effectively determine scaling factors for samples across different conditions or treatments, which doesn't rely on exogenous spike-in chromatin or peak detection to reveal global changes in histone modification occupancy. It can reveal same magnitude of global changes compared to spike-In method.
+Depends:
+  GenomicAlignments,
+  GenomicRanges,  
+  IRanges,
+  R (>= 3.3.1),
+  Rsamtools
+License: GPL2
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 6.1.1
