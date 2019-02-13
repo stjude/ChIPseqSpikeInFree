@@ -1,4 +1,4 @@
-##ChIPseqSpikeFree, 
+## ChIPseqSpikeFree, 
 A Spike-in Free ChIP-Seq Normalization Approach for Detecting Global Changes in Histone Modifications
 
 ## Background
@@ -9,22 +9,25 @@ The detection of global histone modification changes can be addressed using exog
 
 ChIPseqSpikeFree depends on Rsamtools,GenomicRanges and GenomicAlignments to count reads from bam file.
 To install these packages, start R (version "3.4") and enter:
+```
 >source("https://bioconductor.org/biocLite.R")
 >biocLite("Rsamtools")
 >biocLite("GenomicRanges")
 >biocLite("GenomicAlignments")
-
+```
 If you use R (version "3.5") and enter:
+```
 >if (!requireNamespace("BiocManager", quietly = TRUE))
 >    install.packages("BiocManager")
 >BiocManager::install("Rsamtools")
 >BiocManager::install("GenomicRanges")
 >BiocManager::install("GenomicAlignments")
-
+```
 
 ## Installation
 
 If you use R, enter
+```
 #Option 1. intall this package from CRAN
 >install.packages("ChIPseqSpikeFree")
 
@@ -32,11 +35,12 @@ If you use R, enter
 >install.packages("devtools")
 >library(devtools)
 >install_github("hongjianjin/ChIPseqSpikeFree")
-
+```
 
 ### Usage
 
 A simple workflow.
+```
 ##0. load package
 >library("ChIPseqSpikeFree")
 
@@ -45,7 +49,6 @@ A simple workflow.
 #ID ANTIBODY GROUP
 #ChIPseq1.bam H3K27me3 WT
 #ChIPseq2.bam H3K27me3 K27M
-
 >metaFile <- "/your/path/sample_meta.txt"
 >meta <- ReadMeta(metaFile)
 >head(meta)
@@ -57,7 +60,7 @@ ChIPseq2.bam H3K27me3 K27M
 >bams <- c("ChIPseq1.bam","ChIPseq2.bam")
 ##3. run ChIPseqSpikeFree pipeline (when your bam files correspond to the human reference hg19) 
 >ChIPseqSpikeFree(bamFiles=bams, chromFile="hg19",metaFile=metaFile,prefix="test")
-
+```
 
 ### Input
 
@@ -80,8 +83,9 @@ The metadata file is a tab-delimited text file with three columns: ID, ANTIBODY 
 ### Output
 
 After you successfully run following ChIPseqSpikeFree pipeline 
+```
 >ChIPseqSpikeFree(bamFiles=bams, chromFile="hg19",metaFile=metaFile,prefix="test")
-
+```
 Output will include: (in case that you set prefix ="test")
 1. test_SF.txt (text result)
 	tab-delimited text formart, a table of caculated scaling factors by pipeline
