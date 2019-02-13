@@ -331,7 +331,7 @@ CalculateSF <- function(data, metaFile="sample_meta.txt", prefix="test", dataRan
         }
         if (r==2){
             plot(used, main=imgOutput,col=meta$COLOR[r-1] ,lwd=2, xlab="cutoff (CPM per window)", 
-                cex=0.8,cex.main=0.5, type="l",ylab="Proportion of reads", xlim=c(0,MAX_CPM),ylim=c(0.0,1.1))
+                cex=0.8,cex.main=0.5, type="l",ylab="Proportion of reads", xlim=c(0,globEnv$MAX_CPM),ylim=c(0.0,1.1))
        }else{
 
             lines(used,col=meta$COLOR[r-1] ,lty=1,lwd=2,pch=20, cex=0.1)
