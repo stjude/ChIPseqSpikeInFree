@@ -1,7 +1,8 @@
 ######################################################
-MAX_CPM <- 0 # define a global constant 
+# define a global variable
+globEnv <- new.env()
+globEnv$MAX_CPM<-0
 ######################################################
-
 #' generate genome-wide bins for counting purpose
 #'
 #' Given a chrom.size file, this function allows you to generate a your own sliding windows (bins).
@@ -104,6 +105,7 @@ CountRawReads <- function(bamFiles, chromFile="hg19",prefix="test", singleEnd=TR
     cat("\n\tThis step could take some time. Please be patient...")
     bamlist <- BamFileList(bamFiles, yieldSize=5e4)
     names(bamlist) <- basename(bamFiles)
+     assay <- NULL ## To please R CMD check
     counts <- summarizeOverlaps(features=myCoords,
                          reads=bamlist,
                          ignore.strand=TRUE,
@@ -227,7 +229,7 @@ ParseReadCounts <- function(data, metaFile="sample_meta.txt", by=0.05, prefix="t
     colnames(CPM) <- colnames(data)
     MAX <- apply(CPM,2, max)
     MAX <- ceiling(max(MAX))
-    MAX_CPM <<- MAX # keep it as a global constant
+    globEnv$MAX_CPM <- MAX # keep it as a global constant
     SEQ <- seq(0,MAX,by=by)  # smaller value, higher resolution
     dat <- data.frame(cutoff=SEQ)
     for(ind in 1:ncol(CPM)) {
@@ -324,8 +326,8 @@ CalculateSF <- function(data, metaFile="sample_meta.txt", prefix="test", dataRan
         xMax <- max(used$x[used$y==yMax])
         slope <- round((yMax - yMin)/(xMax-xMin),5)
         slopes <- c(slopes,slope)
-        if (MAX_CPM == 0 | is.na(MAX_CPM)){
-          MAX_CPM <- 60
+        if (globEnv$MAX_CPM == 0 ){
+          globEnv$MAX_CPM <- 60
         }
         if (r==2){
             plot(used, main=imgOutput,col=meta$COLOR[r-1] ,lwd=2, xlab="cutoff (CPM per window)", 

@@ -11,3 +11,8 @@ import(GenomicAlignments)
 import(GenomicRanges)
 import(IRanges)
 import(Rsamtools)
+importFrom("grDevices", "dev.off", "pdf")
+importFrom("graphics", "abline", "boxplot", "legend", "lines", "par",
+     "plot", "stripchart")
+importFrom("stats", "na.omit")
+importFrom("utils", "read.table", "write.table")
