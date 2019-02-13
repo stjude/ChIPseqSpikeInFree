@@ -43,12 +43,14 @@ A simple workflow.
 ```
 ##0. load package
 >library("ChIPseqSpikeFree")
-
+```
 ##1. generate a sample_meta.txt (tab-delimited txt file) as follows
 #/your/path/sample_meta.txt
-#ID ANTIBODY GROUP
-#ChIPseq1.bam H3K27me3 WT
-#ChIPseq2.bam H3K27me3 K27M
+# ID ANTIBODY GROUP
+# ChIPseq1.bam H3K27me3 WT
+# ChIPseq2.bam H3K27me3 K27M
+
+```
 >metaFile <- "/your/path/sample_meta.txt"
 >meta <- ReadMeta(metaFile)
 >head(meta)
@@ -66,11 +68,11 @@ ChIPseq2.bam H3K27me3 K27M
 
 In the simple usage scenario, the user should have ChIP-seq Bam files ready and sample information can be specified in a metadata file (metaFile) and should choose a correct reference genome corresponding to bams. 
 
-#####1.bamFiles: a vector of bam filenames
+##### 1.bamFiles: a vector of bam filenames
 
 User should follow ChIP-seq guidelines suggested by EMCODE consortium(Landt, et al., 2012) and check the data quality. We recommend to remove low-quality or non-unique reads from your bam files before you run ChIPseqSpikeFree normalization.
 
-#####2.chromFile:chromosome sizes of reference genome. 
+##### 2.chromFile:chromosome sizes of reference genome. 
 "hg19", "mm9","mm10","hg19" are included in the package.
 For other genomes, you could 
 - 2.1 use fetchChromSizes to get it from UCSC, but not all genomes are available. (replace following ${DB} with reference genome)
@@ -79,7 +81,7 @@ For other genomes, you could
 $samtools faidx genome.fa
 $cut -f1,2 genome.fa.fai > genome.chrom.sizes
 
-#####3.metaFile: 
+##### 3.metaFile: 
 A tab-delimited text file having three columns: ID, ANTIBODY and GROUP. Where ID is the bam file name of ChIP-seq sample that will be included for analysis;  ANTIBODY represents antibody used for ChIP and GROUP describes the biological treatment or condition of this sample. 
 
 
@@ -90,16 +92,16 @@ After you successfully run following ChIPseqSpikeFree pipeline
 >ChIPseqSpikeFree(bamFiles=bams, chromFile="hg19",metaFile=metaFile,prefix="test")
 ```
 Output will include: (in case that you set prefix ="test")
-1. test_SF.txt (text result)
-       - tab-delimited text formart, a table of caculated scaling factors by pipeline
-2. test_boxplot.pdf (graphical result)
-       - view of scaling factors as boxplot based on test_SF.txt
-3. test_rawCounts.txt (intermediate file)
-       - tab-delimited text formart, a table of raw read count for each 1kb bin across genome
-4. test_parsedMatrix.txt (intermediate file)
-       - tab-delimited text formart, a table of proportion of reads below given cutoffs (CPMW)
-5. test_distribution.pdf (intermediate file)
-       - view of proportion of reads below the given CPMW based on test_parsedMatrix.txt
+##### 1. test_SF.txt (text result)
+- tab-delimited text formart, a table of caculated scaling factors by pipeline
+##### 2. test_boxplot.pdf (graphical result)
+- view of scaling factors as boxplot based on test_SF.txt
+##### 3. test_rawCounts.txt (intermediate file)
+- tab-delimited text formart, a table of raw read count for each 1kb bin across genome
+##### 4. test_parsedMatrix.txt (intermediate file)
+- tab-delimited text formart, a table of proportion of reads below given cutoffs (CPMW)
+##### 5. test_distribution.pdf (intermediate file)
+- view of proportion of reads below the given CPMW based on test_parsedMatrix.txt
 
 
 ## Notes
