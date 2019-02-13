@@ -45,10 +45,10 @@ A simple workflow.
 ```>library("ChIPseqSpikeFree")
 ```
 ###### 1. generate a sample_meta.txt (tab-delimited txt file) as follows
-#/your/path/sample_meta.txt
-# ID ANTIBODY GROUP
-# ChIPseq1.bam H3K27me3 WT
-# ChIPseq2.bam H3K27me3 K27M
+##save as "/your/path/sample_meta.txt"
+ ID ANTIBODY GROUP
+ ChIPseq1.bam H3K27me3 WT
+ ChIPseq2.bam H3K27me3 K27M
 
 ```
 >metaFile <- "/your/path/sample_meta.txt"
