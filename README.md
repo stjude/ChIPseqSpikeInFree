@@ -39,10 +39,11 @@ If you use R, enter
 
 ### Usage
 
-A simple workflow.
+A simple workflow in R environment.
 
 ###### 0. load package
-```>library("ChIPseqSpikeFree")
+```
+>library("ChIPseqSpikeFree")
 ```
 ###### 1. generate a sample_meta.txt (tab-delimited txt file) as follows
 ##save as "/your/path/sample_meta.txt"
@@ -52,11 +53,6 @@ A simple workflow.
 
 ```
 >metaFile <- "/your/path/sample_meta.txt"
->meta <- ReadMeta(metaFile)
->head(meta)
-ID ANTIBODY GROUP
-ChIPseq1.bam H3K27me3 WT
-ChIPseq2.bam H3K27me3 K27M
 ```
 
 ###### 2. assign bam file names to a vector
