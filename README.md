@@ -64,11 +64,12 @@ ChIPseq2.bam H3K27me3 K27M
 In the simple usage scenario, the user should have ChIP-seq Bam files ready and sample information can be specified in a metadata file (metaFile) and should choose a correct reference genome corresponding to bams. 
 1.bamFiles:  a vector of bam filenames
 User should follow ChIP-seq guidelines suggested by EMCODE consortium(Landt, et al., 2012) and check the data quality. We recommend to remove low-quality or non-unique reads from your bam files before you run ChIPseqSpikeFree normalization.
+
 2.chromFile:chromosome sizes of reference genome. "hg19", "mm9","mm10","hg19" are included in the package.
 For other genomes, you could 
-2.1 use fetchChromSizes to get it from UCSC, but not all genomes are available. (replace following ${DB} with reference genome)
+-2.1 use fetchChromSizes to get it from UCSC, but not all genomes are available. (replace following ${DB} with reference genome)
 "http://hgdownload.soe.ucsc.edu/goldenPath/${DB}/bigZips/${DB}.chrom.sizes"
-2.2 generate directly from fasta file (Linux)
+-2.2 generate directly from fasta file (Linux)
 $samtools faidx genome.fa
 $cut -f1,2 genome.fa.fai > genome.chrom.sizes
 
@@ -97,13 +98,13 @@ Output will include: (in case that you set prefix ="test")
 ## Notes
 
 1.What **IS** included in this repository 
-1.1 source code
-1.2 documentation
-1.3 chromFile of human and mouse reference genome (hg19, mm9, mm10 and hg38)
-1.4 an example of sample_meta.txt
+- source code
+- documentation
+- chromFile of human and mouse reference genome (hg19, mm9, mm10 and hg38)
+- an example of sample_meta.txt
 
 2.What is **NOT** included and users will have to provide by themselves:
-2.1 bam files
-2.2 sample_meta.txt
-2.3 chromFile except hg19, mm9, mm10 and hg38
+- bam files
+- sample_meta.txt
+- chromFile except hg19, mm9, mm10 and hg38
 
