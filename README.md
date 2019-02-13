@@ -1,4 +1,4 @@
-#ChIPseqSpikeFree, 
+##ChIPseqSpikeFree, 
 A Spike-in Free ChIP-Seq Normalization Approach for Detecting Global Changes in Histone Modifications
 
 ## Background
@@ -9,30 +9,29 @@ The detection of global histone modification changes can be addressed using exog
 
 ChIPseqSpikeFree depends on Rsamtools,GenomicRanges and GenomicAlignments to count reads from bam file.
 To install these packages, start R (version "3.4") and enter:
-	 source("https://bioconductor.org/biocLite.R")
-	 biocLite("Rsamtools")
-	 biocLite("GenomicRanges")
-	 biocLite("GenomicAlignments")
+>source("https://bioconductor.org/biocLite.R")
+>biocLite("Rsamtools")
+>biocLite("GenomicRanges")
+>biocLite("GenomicAlignments")
 
 If you use R (version "3.5") and enter:
-	if (!requireNamespace("BiocManager", quietly = TRUE))
-	    install.packages("BiocManager")
-	BiocManager::install("Rsamtools")
-	BiocManager::install("GenomicRanges")
-	BiocManager::install("GenomicAlignments")
+>if (!requireNamespace("BiocManager", quietly = TRUE))
+>    install.packages("BiocManager")
+>BiocManager::install("Rsamtools")
+>BiocManager::install("GenomicRanges")
+>BiocManager::install("GenomicAlignments")
 
 
 ## Installation
 
 If you use R, enter
 #Option 1. intall this package from CRAN
-install.packages("ChIPseqSpikeFree")
+>install.packages("ChIPseqSpikeFree")
 
 #Option 2. intall this package from GitHub
-install.packages("devtools")
-library(devtools)
-install_github("hongjianjin/ChIPseqSpikeFree")
-
+>install.packages("devtools")
+>library(devtools)
+>install_github("hongjianjin/ChIPseqSpikeFree")
 
 
 ### Usage
@@ -66,13 +65,13 @@ In the simple usage scenario, the user should have ChIP-seq Bam files ready and 
 1.bamFiles:  a vector of bam filenames
 User should follow ChIP-seq guidelines suggested by EMCODE consortium(Landt, et al., 2012) and check the data quality. We recommend to remove low-quality or non-unique reads from your bam files before you run ChIPseqSpikeFree normalization.
 2.chromFile:chromosome sizes of reference genome. "hg19", "mm9","mm10","hg19" are included in the package.
-	For other genomes, you could 
-	2.1 use fetchChromSizes to get it from UCSC, but not all genomes are available.
-	"http://hgdownload.soe.ucsc.edu/goldenPath/${DB}/bigZips/${DB}.chrom.sizes"
-	format:http://hgdownload.cse.ucsc.edu/goldenPath/hg19/bigZips/hg19.chrom.sizes
-	2.2 generate directly from fasta file
-	samtools faidx genome.fa
-	cut -f1,2 genome.fa.fai > genome.chrom.sizes
+For other genomes, you could 
+2.1 use fetchChromSizes to get it from UCSC, but not all genomes are available. (replace following ${DB} with reference genome)
+"http://hgdownload.soe.ucsc.edu/goldenPath/${DB}/bigZips/${DB}.chrom.sizes"
+2.2 generate directly from fasta file (Linux)
+$samtools faidx genome.fa
+$cut -f1,2 genome.fa.fai > genome.chrom.sizes
+
 3.metaFile: 
 The metadata file is a tab-delimited text file with three columns: ID, ANTIBODY and GROUP. Where ID is the bam file name of ChIP-seq sample that will be included for analysis;  ANTIBODY represents antibody used for ChIP and GROUP describes the biological treatment or condition of this sample. 
 
@@ -98,13 +97,13 @@ Output will include: (in case that you set prefix ="test")
 ## Notes
 
 1.What **IS** included in this repository 
-	1.1 source code
-	1.2 documentation
-	1.3 chromFile of human and mouse reference genome (hg19, mm9, mm10 and hg38)
-	1.4 an example of sample_meta.txt
+1.1 source code
+1.2 documentation
+1.3 chromFile of human and mouse reference genome (hg19, mm9, mm10 and hg38)
+1.4 an example of sample_meta.txt
 
 2.What is **NOT** included and users will have to provide by themselves:
-	2.1 bam files
-	2.2 sample_meta.txt
-	2.3 chromFile except hg19, mm9, mm10 and hg38
+2.1 bam files
+2.2 sample_meta.txt
+2.3 chromFile except hg19, mm9, mm10 and hg38
 
