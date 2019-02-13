@@ -65,14 +65,15 @@ ChIPseq2.bam H3K27me3 K27M
 ### Input
 
 In the simple usage scenario, the user should have ChIP-seq Bam files ready and sample information can be specified in a metadata file (metaFile) and should choose a correct reference genome corresponding to bams. 
+
 1.bamFiles:  a vector of bam filenames
 User should follow ChIP-seq guidelines suggested by EMCODE consortium(Landt, et al., 2012) and check the data quality. We recommend to remove low-quality or non-unique reads from your bam files before you run ChIPseqSpikeFree normalization.
 
 2.chromFile:chromosome sizes of reference genome. "hg19", "mm9","mm10","hg19" are included in the package.
 For other genomes, you could 
--2.1 use fetchChromSizes to get it from UCSC, but not all genomes are available. (replace following ${DB} with reference genome)
+- 2.1 use fetchChromSizes to get it from UCSC, but not all genomes are available. (replace following ${DB} with reference genome)
 "http://hgdownload.soe.ucsc.edu/goldenPath/${DB}/bigZips/${DB}.chrom.sizes"
--2.2 generate directly from fasta file (Linux)
+- 2.2 generate directly from fasta file (Linux)
 $samtools faidx genome.fa
 $cut -f1,2 genome.fa.fai > genome.chrom.sizes
 
