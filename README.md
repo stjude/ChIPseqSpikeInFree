@@ -40,11 +40,11 @@ If you use R, enter
 ### Usage
 
 A simple workflow.
+
+###### 0. load package
+```>library("ChIPseqSpikeFree")
 ```
-##0. load package
->library("ChIPseqSpikeFree")
-```
-##1. generate a sample_meta.txt (tab-delimited txt file) as follows
+###### 1. generate a sample_meta.txt (tab-delimited txt file) as follows
 #/your/path/sample_meta.txt
 # ID ANTIBODY GROUP
 # ChIPseq1.bam H3K27me3 WT
@@ -57,10 +57,15 @@ A simple workflow.
 ID ANTIBODY GROUP
 ChIPseq1.bam H3K27me3 WT
 ChIPseq2.bam H3K27me3 K27M
+```
 
-##2. assign bam file names to a vector
+###### 2. assign bam file names to a vector
+```
 >bams <- c("ChIPseq1.bam","ChIPseq2.bam")
-##3. run ChIPseqSpikeFree pipeline (when your bam files correspond to the human reference hg19) 
+```
+
+###### 3. run ChIPseqSpikeFree pipeline (when your bam files correspond to the human reference hg19) 
+```
 >ChIPseqSpikeFree(bamFiles=bams, chromFile="hg19",metaFile=metaFile,prefix="test")
 ```
 
