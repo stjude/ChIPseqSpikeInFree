@@ -29,10 +29,10 @@ If you use R (version "3.5") and enter:
 
 If you use R, enter
 ```
-# Option 1. intall this package from CRAN
+# Option 1. Install this package from CRAN
 > install.packages("ChIPseqSpikeInFree")
 
-# Option 2. intall this package from GitHub
+# Option 2. Install this package from GitHub
 > install.packages("devtools")
 > library(devtools)
 > install_github("hongjianjin/ChIPseqSpikeInFree")
@@ -47,11 +47,12 @@ A simple workflow in R environment.
 > library("ChIPseqSpikeInFree")
 ```
 ###### 1. Generate a sample_meta.txt (tab-delimited txt file) as follows
-##save as "/your/path/sample_meta.txt"
+#### Save as "/your/path/sample_meta.txt"
 
- ID ANTIBODY GROUP
- ChIPseq1.bam H3K27me3 WT
- ChIPseq2.bam H3K27me3 K27M
+| ID | ANTIBODY | GROUP |
+| -- | -------- | ----- |
+| ChIPseq1.bam | H3K27me3 | WT |
+| ChIPseq2.bam | H3K27me3 | K27M |
 
 ```
 > metaFile <- "/your/path/sample_meta.txt"
