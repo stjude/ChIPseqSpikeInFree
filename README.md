@@ -3,104 +3,107 @@ A Spike-in Free ChIP-Seq Normalization Approach for Detecting Global Changes in 
 
 ## Background
 
-The detection of global histone modification changes can be addressed using exogenous reference Spike-in controls. However, many thousands of ChIP-seq data available in public depositories nowadays were done without including Spike-in procedure. In order to do quantitative comparisons between these data, researchers have to regenerate whole data set using spikein ChIP-seq protocols – this is an infeasible solution sometime. A basic scaling factor calculation for these scenarios remains a problem with surprisingly few solutions presented so far. We pesent ChIPseqSpikeInFree , a simple ChIP-seq normalization method to effectively determine scaling factors for samples across different conditions or treatments, which doesn't rely on exogenous spike-in chromatin or peak detection to reveal global changes in histone modification occupancy. It can reveal same magnitude of global changes compared to spike-In method.
+The detection of global histone modification changes can be addressed using exogenous reference Spike-in controls. However, many thousands of ChIP-seq data available in public depositories nowadays were done without including Spike-in procedure. In order to do quantitative comparisons between these data, researchers have to regenerate whole data set using spikein ChIP-seq protocols â€“ this is an infeasible solution sometime. A basic scaling factor calculation for these scenarios remains a problem with surprisingly few solutions presented so far. We pesent ChIPseqSpikeInFree , a simple ChIP-seq normalization method to effectively determine scaling factors for samples across different conditions or treatments, which doesn't rely on exogenous spike-in chromatin or peak detection to reveal global changes in histone modification occupancy. It can reveal same magnitude of global changes compared to spike-In method.
 
 ## Prerequisites
 
 ChIPseqSpikeInFree depends on Rsamtools,GenomicRanges and GenomicAlignments to count reads from bam file.
+
 To install these packages, start R (version "3.4") and enter:
 ```
->source("https://bioconductor.org/biocLite.R")
->biocLite("Rsamtools")
->biocLite("GenomicRanges")
->biocLite("GenomicAlignments")
+> source("https://bioconductor.org/biocLite.R")
+> biocLite("Rsamtools")
+> biocLite("GenomicRanges")
+> biocLite("GenomicAlignments")
 ```
 If you use R (version "3.5") and enter:
 ```
->if (!requireNamespace("BiocManager", quietly = TRUE))
->    install.packages("BiocManager")
->BiocManager::install("Rsamtools")
->BiocManager::install("GenomicRanges")
->BiocManager::install("GenomicAlignments")
+> if (!requireNamespace("BiocManager", quietly = TRUE))
+>     install.packages("BiocManager")
+> BiocManager::install("Rsamtools")
+> BiocManager::install("GenomicRanges")
+> BiocManager::install("GenomicAlignments")
 ```
 
 ## Installation
 
 If you use R, enter
 ```
-#Option 1. intall this package from CRAN
->install.packages("ChIPseqSpikeInFree")
+# Option 1. Install this package from CRAN
+> install.packages("ChIPseqSpikeInFree")
 
-#Option 2. intall this package from GitHub
->install.packages("devtools")
->library(devtools)
->install_github("hongjianjin/ChIPseqSpikeInFree")
+# Option 2. Install this package from GitHub
+> install.packages("devtools")
+> library(devtools)
+> install_github("hongjianjin/ChIPseqSpikeInFree")
 ```
 
 ### Usage
 
 A simple workflow in R environment.
 
-###### 0. load package
+###### 0. Load package
 ```
->library("ChIPseqSpikeInFree")
+> library("ChIPseqSpikeInFree")
 ```
-###### 1. generate a sample_meta.txt (tab-delimited txt file) as follows
-##save as "/your/path/sample_meta.txt"
- ID ANTIBODY GROUP
- ChIPseq1.bam H3K27me3 WT
- ChIPseq2.bam H3K27me3 K27M
+###### 1. Generate a sample_meta.txt (tab-delimited txt file) as follows
+#### Save as "/your/path/sample_meta.txt"
+
+| ID | ANTIBODY | GROUP |
+| -- | -------- | ----- |
+| ChIPseq1.bam | H3K27me3 | WT |
+| ChIPseq2.bam | H3K27me3 | K27M |
 
 ```
->metaFile <- "/your/path/sample_meta.txt"
+> metaFile <- "/your/path/sample_meta.txt"
 ```
 
-###### 2. assign bam file names to a vector
+###### 2. Assign bam file names to a vector
 ```
->bams <- c("ChIPseq1.bam","ChIPseq2.bam")
+> bams <- c("ChIPseq1.bam","ChIPseq2.bam")
 ```
 
 ###### 3. run ChIPseqSpikeInFree pipeline (when your bam files correspond to the human reference hg19) 
 ```
->ChIPseqSpikeInFree(bamFiles=bams, chromFile="hg19",metaFile=metaFile,prefix="test")
+> ChIPseqSpikeInFree(bamFiles = bams, chromFile = "hg19", metaFile = metaFile, prefix = "test")
 ```
 
 ### Input
 
 In the simple usage scenario, the user should have ChIP-seq Bam files ready and sample information can be specified in a metadata file (metaFile) and should choose a correct reference genome corresponding to bams. 
 
-##### 1.bamFiles: a vector of bam filenames
+##### 1. bamFiles: a vector of bam filenames
 
 User should follow ChIP-seq guidelines suggested by EMCODE consortium(Landt, et al., 2012) and check the data quality. We recommend to remove low-quality or non-unique reads from your bam files before you run ChIPseqSpikeInFree normalization.
 
-##### 2.chromFile:chromosome sizes of reference genome. 
+##### 2. chromFile: chromosome sizes of reference genome. 
 "hg19", "mm9","mm10","hg19" are included in the package.
 For other genomes, you could 
 - 2.1 use fetchChromSizes to get it from UCSC, but not all genomes are available. (replace following ${DB} with reference genome)
 "http://hgdownload.soe.ucsc.edu/goldenPath/${DB}/bigZips/${DB}.chrom.sizes"
 - 2.2 generate directly from fasta file (Linux)
-$samtools faidx genome.fa
-$cut -f1,2 genome.fa.fai > genome.chrom.sizes
+$ samtools faidx genome.fa
+$ cut -f1,2 genome.fa.fai > genome.chrom.sizes
 
-##### 3.metaFile: 
-A tab-delimited text file having three columns: ID, ANTIBODY and GROUP. Where ID is the bam file name of ChIP-seq sample that will be included for analysis;  ANTIBODY represents antibody used for ChIP and GROUP describes the biological treatment or condition of this sample. 
+##### 3. metaFile: 
+A tab-delimited text file having three columns: ID, ANTIBODY and GROUP. Where ID is the bam file name of ChIP-seq sample that will be included for analysis; ANTIBODY represents antibody used for ChIP and GROUP describes the biological treatment or condition of this sample. 
 
 
 ### Output
 
 After you successfully run following ChIPseqSpikeInFree pipeline 
 ```
->ChIPseqSpikeInFree(bamFiles=bams, chromFile="hg19",metaFile=metaFile,prefix="test")
+> ChIPseqSpikeInFree(bamFiles = bams, chromFile = "hg19", metaFile = metaFile, prefix = "test")
 ```
 Output will include: (in case that you set prefix ="test")
 ##### 1. test_SF.txt (text result)
-- tab-delimited text formart, a table of caculated scaling factors by pipeline
+- tab-delimited text format, a table of calculated scaling factors by pipeline
 ##### 2. test_boxplot.pdf (graphical result)
 - view of scaling factors as boxplot based on test_SF.txt
 ##### 3. test_rawCounts.txt (intermediate file)
-- tab-delimited text formart, a table of raw read count for each 1kb bin across genome
+- tab-delimited text format, a table of raw read counts for each 1kb bin across genome
 ##### 4. test_parsedMatrix.txt (intermediate file)
-- tab-delimited text formart, a table of proportion of reads below given cutoffs (CPMW)
+- tab-delimited text format, a table of proportion of reads below given cutoffs (CPMW)
 ##### 5. test_distribution.pdf (intermediate file)
 - view of proportion of reads below the given CPMW based on test_parsedMatrix.txt
 
