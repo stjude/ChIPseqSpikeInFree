@@ -1,13 +1,14 @@
-## ChIPseqSpikeFree, 
+## ChIPseqSpikeInFree, 
 A Spike-in Free ChIP-Seq Normalization Approach for Detecting Global Changes in Histone Modifications
 
 ## Background
 
-The detection of global histone modification changes can be addressed using exogenous reference Spike-in controls. However, many thousands of ChIP-seq data available in public depositories nowadays were done without including Spike-in procedure. In order to do quantitative comparisons between these data, researchers have to regenerate whole data set using spikein ChIP-seq protocols — this is an infeasible solution sometimes. A basic scaling factor calculation for these scenarios remains a problem with surprisingly few solutions presented so far. We pesent ChIPseqSpikeFree, a simple ChIP-seq normalization method to effectively determine scaling factors for samples across different conditions or treatments, which doesn't rely on exogenous spike-in chromatin or peak detection to reveal global changes in histone modification occupancy. It can reveal same magnitude of global changes compared to spike-In method.
+The detection of global histone modification changes can be addressed using exogenous reference Spike-in controls. However, many thousands of ChIP-seq data available in public depositories nowadays were done without including Spike-in procedure. In order to do quantitative comparisons between these data, researchers have to regenerate whole data set using spikein ChIP-seq protocols – this is an infeasible solution sometime. A basic scaling factor calculation for these scenarios remains a problem with surprisingly few solutions presented so far. We pesent ChIPseqSpikeInFree , a simple ChIP-seq normalization method to effectively determine scaling factors for samples across different conditions or treatments, which doesn't rely on exogenous spike-in chromatin or peak detection to reveal global changes in histone modification occupancy. It can reveal same magnitude of global changes compared to spike-In method.
 
 ## Prerequisites
 
-ChIPseqSpikeFree depends on Rsamtools, GenomicRanges and GenomicAlignments to count reads from bam file.
+ChIPseqSpikeInFree depends on Rsamtools,GenomicRanges and GenomicAlignments to count reads from bam file.
+
 To install these packages, start R (version "3.4") and enter:
 ```
 > source("https://bioconductor.org/biocLite.R")
@@ -28,13 +29,13 @@ If you use R (version "3.5") and enter:
 
 If you use R, enter
 ```
-# Option 1. Install this package from CRAN
-> install.packages("ChIPseqSpikeFree")
+# Option 1. intall this package from CRAN
+> install.packages("ChIPseqSpikeInFree")
 
-# Option 2. Install this package from GitHub
+# Option 2. intall this package from GitHub
 > install.packages("devtools")
 > library(devtools)
-> install_github("hongjianjin/ChIPseqSpikeFree")
+> install_github("hongjianjin/ChIPseqSpikeInFree")
 ```
 
 ### Usage
@@ -43,7 +44,7 @@ A simple workflow in R environment.
 
 ###### 0. Load package
 ```
-> library("ChIPseqSpikeFree")
+> library("ChIPseqSpikeInFree")
 ```
 ###### 1. Generate a sample_meta.txt (tab-delimited txt file) as follows
 ##save as "/your/path/sample_meta.txt"
@@ -61,9 +62,9 @@ A simple workflow in R environment.
 > bams <- c("ChIPseq1.bam","ChIPseq2.bam")
 ```
 
-###### 3. Run ChIPseqSpikeFree pipeline (when your bam files correspond to the human reference hg19) 
+###### 3. run ChIPseqSpikeInFree pipeline (when your bam files correspond to the human reference hg19) 
 ```
-> ChIPseqSpikeFree(bamFiles = bams, chromFile = "hg19", metaFile = metaFile, prefix = "test")
+> ChIPseqSpikeInFree(bamFiles = bams, chromFile = "hg19", metaFile = metaFile, prefix = "test")
 ```
 
 ### Input
@@ -72,7 +73,7 @@ In the simple usage scenario, the user should have ChIP-seq Bam files ready and 
 
 ##### 1. bamFiles: a vector of bam filenames
 
-User should follow ChIP-seq guidelines suggested by EMCODE consortium (Landt, et al., 2012) and check the data quality. We recommend removing low-quality or non-unique reads from your bam files before you run ChIPseqSpikeFree normalization.
+User should follow ChIP-seq guidelines suggested by EMCODE consortium(Landt, et al., 2012) and check the data quality. We recommend to remove low-quality or non-unique reads from your bam files before you run ChIPseqSpikeInFree normalization.
 
 ##### 2. chromFile: chromosome sizes of reference genome. 
 "hg19", "mm9","mm10","hg19" are included in the package.
@@ -89,9 +90,9 @@ A tab-delimited text file having three columns: ID, ANTIBODY and GROUP. Where ID
 
 ### Output
 
-After you successfully run following ChIPseqSpikeFree pipeline 
+After you successfully run following ChIPseqSpikeInFree pipeline 
 ```
-> ChIPseqSpikeFree(bamFiles = bams, chromFile = "hg19", metaFile = metaFile, prefix = "test")
+> ChIPseqSpikeInFree(bamFiles = bams, chromFile = "hg19", metaFile = metaFile, prefix = "test")
 ```
 Output will include: (in case that you set prefix ="test")
 ##### 1. test_SF.txt (text result)
