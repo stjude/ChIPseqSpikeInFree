@@ -2,7 +2,7 @@
 
 export(BoxplotSF)
 export(CalculateSF)
-export(ChIPseqSpikeFree)
+export(ChIPseqSpikeInFree)
 export(CountRawReads)
 export(GenerateBins)
 export(ParseReadCounts)
