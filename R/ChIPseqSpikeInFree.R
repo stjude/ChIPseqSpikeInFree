@@ -1,8 +1,4 @@
 ######################################################
-# define a global variable
-globEnv <- new.env()
-globEnv$MAX_CPM <- 0
-######################################################
 #' generate genome-wide bins for counting purpose
 #'
 #' Given a chrom.size file, this function allows you to generate a your own sliding windows (bins).
@@ -77,6 +73,7 @@ GenerateBins <- function(chromFile, binSize = 1000, overlap = 0, withChr = TRUE)
 #' @param chromFile a chrom.size file. Given "hg19","mm10","mm9" or "hg38", will load chrom.size file from package folder. Otherwise, give a /your/path/chrom.size
 #' @param prefix prefix of output file name
 #' @param singleEnd To count paired-end reads, set argument singleEnd=FALSE
+#' @param binSize size of bins (bp)
 #' @return a data.frame of raw counts for each bin
 #' @import Rsamtools
 #' @import GenomicRanges
@@ -87,13 +84,13 @@ GenerateBins <- function(chromFile, binSize = 1000, overlap = 0, withChr = TRUE)
 #' ## 1.count reads using mm9 bams
 #' # bams <- c("your/path/ChIPseq1.bam","your/path/ChIPseq2.bam")
 #' # rawCountDF <- CountRawReads(bamFiles=bams,chromFile="mm9",prefix="your/path/test",singleEnd=TRUE)
-CountRawReads <- function(bamFiles, chromFile = "hg19", prefix = "test", singleEnd = TRUE) {
+CountRawReads <- function(bamFiles, chromFile = "hg19", prefix = "test", singleEnd = TRUE, binSize=1000) {
   # count raw reads for every 1kb bin across genome
 
   # check chromosome notation in bam file
   bamHeader <- scanBamHeader(bamFiles[1])
   chrFlag <- grepl("SN:chr", bamHeader[[1]]$text[2])
-  binDF <- GenerateBins(chromFile = chromFile, binSize = 1000, overlap = 0, withChr = chrFlag)
+  binDF <- GenerateBins(chromFile = chromFile, binSize = binSize, overlap = 0, withChr = chrFlag)
   bins <- binDF
   myCoords <- GRanges(
     seqnames = bins[, 1],
@@ -230,7 +227,6 @@ ParseReadCounts <- function(data, metaFile = "sample_meta.txt", by = 0.05, prefi
   colnames(CPM) <- colnames(data)
   MAX <- apply(CPM, 2, max)
   MAX <- ceiling(max(MAX))
-  globEnv$MAX_CPM <- MAX # keep it as a global constant
   SEQ <- seq(0, MAX, by = by) # smaller value, higher resolution
   dat <- data.frame(cutoff = SEQ)
   for (ind in 1:ncol(CPM)) {
@@ -316,6 +312,7 @@ CalculateSF <- function(data, metaFile = "sample_meta.txt", prefix = "test", dat
   imgOutput <- paste0(prefix, "_distribution.pdf")
   pdf(imgOutput, width = 6, height = 6)
   slopes <- NULL
+  MAX_CPM <- max(data[,1])
   for (r in 2:ncol(data)) {
     x <- data[, 1]
     y <- data[, r]
@@ -327,13 +324,10 @@ CalculateSF <- function(data, metaFile = "sample_meta.txt", prefix = "test", dat
     xMax <- max(used$x[used$y == yMax])
     slope <- round((yMax - yMin) / (xMax - xMin), 5)
     slopes <- c(slopes, slope)
-    if (globEnv$MAX_CPM == 0) {
-      globEnv$MAX_CPM <- 60
-    }
     if (r == 2) {
       plot(used,
-        main = imgOutput, col = meta$COLOR[r - 1], lwd = 2, xlab = "cutoff (CPM per window)",
-        cex = 0.8, cex.main = 0.5, type = "l", ylab = "Proportion of reads", xlim = c(0, globEnv$MAX_CPM), ylim = c(0.0, 1.1)
+        main = imgOutput, col = meta$COLOR[r - 1], lwd = 2, xlab = "cutoff (CPMW)",
+        cex = 0.8, cex.main = 0.5, type = "l", ylab = "Proportion of reads", xlim = c(0, MAX_CPM), ylim = c(0.0, 1.1)
       )
     } else {
       lines(used, col = meta$COLOR[r - 1], lty = 1, lwd = 2, pch = 20, cex = 0.1)
@@ -434,6 +428,7 @@ BoxplotSF <- function(input, prefix = "test") {
 #' @param bamFiles a vector of bam filenames.
 #' @param chromFile chrom.size file. Given "hg19","mm10","mm9" or "hg38", will load chrom.size file from package folder.
 #' @param metaFile a filename of metadata file. the file must have three columns: ID (bam filename without full path), ANTIBODY and GROUP
+#' @param binSize size of bins (bp)
 #' @param prefix prefix of output filename.
 #' @return A data.frame of the updated metaFile with scaling factor
 #' @export
@@ -452,7 +447,7 @@ BoxplotSF <- function(input, prefix = "test") {
 #' 
 #' ## 3. run ChIPseqSpikeInFree pipeline
 #' # ChIPseqSpikeInFree(bamFiles=bams, chromFile="mm9",metaFile=metaFile,prefix="test")
-ChIPseqSpikeInFree <- function(bamFiles, chromFile = "hg19", metaFile = "sample_meta.txt", prefix = "test") {
+ChIPseqSpikeInFree <- function(bamFiles, chromFile = "hg19", metaFile = "sample_meta.txt", prefix = "test", binSize=1000) {
   # perform ChIP-seq spike-free normalization in one step
 
   cat("\nstep1. loading metadata file...")
@@ -467,7 +462,7 @@ ChIPseqSpikeInFree <- function(bamFiles, chromFile = "hg19", metaFile = "sample_
     cat("\n\t", output1, "[just loading the existing file; delete this file first to do re-counting ]")
     rawCountDF <- read.table(output1, sep = "\t", header = TRUE, fill = TRUE, stringsAsFactors = FALSE, quote = "", row.names = 1, check.names = F)
   } else {
-    rawCountDF <- CountRawReads(bamFiles = bamFiles, chromFile = chromFile, prefix = prefix)
+    rawCountDF <- CountRawReads(bamFiles = bamFiles, chromFile = chromFile, prefix = prefix, binSize=binSize)
   }
   cat("\n\t[--done--]\n")
   cat("\nstep3. parsing raw counts...")
@@ -478,7 +473,8 @@ ChIPseqSpikeInFree <- function(bamFiles, chromFile = "hg19", metaFile = "sample_
     cat("\n\t", output1, "[just loading the existing file; delete this file first to re-parse rawCount table]")
     parsedDF <- read.table(output2, sep = "\t", header = TRUE, fill = TRUE, stringsAsFactors = FALSE, quote = "", row.names = NULL, check.names = F)
   } else {
-    parsedDF <- ParseReadCounts(data = rawCountDF, metaFile = meta, prefix = prefix, by = 0.05)
+    steps <- 0.05* binSize/1000
+    parsedDF <- ParseReadCounts(data = rawCountDF, metaFile = meta, prefix = prefix, by = steps)
   }
   cat("\n\t[--done--]\n")
   cat("\nstep4. calculating scaling factors...")
