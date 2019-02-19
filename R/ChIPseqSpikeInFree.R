@@ -393,36 +393,32 @@ BoxplotSF <- function(input, prefix = "test") {
   if (!"SF" %in% colnames(input) || !"ANTIBODY" %in% colnames(input) || !"GROUP" %in% colnames(input)) {
     stop("Input looks invalid for BoxplotSF().\n")
   }
-
+    
+  input$GROUP2 <- paste(input$GROUP,input$ANTIBODY,sep=".")
+  input <- input[order(input$ANTIBODY,input$GROUP), ]
+  groupLabels <- unique(input$GROUP2)
   if (!"COLOR" %in% colnames(input)) {
     tim10equal <- c("skyblue", "#EF0000", "grey", "#00DFFF", "#50FFAF", "#BFFF40", "#FFCF00", "#FF6000", "#0000FF", "#800000")
-    myCols <- tim10equal[as.factor(groups)]
+    myCols <- tim10equal[as.factor(input$GROUP2)]
   } else {
-    combs <- input[, c("GROUP", "COLOR", "ANTIBODY")]
-    combs <- combs[!duplicated(combs), ]
-    groups <- paste(combs[, "GROUP"], combs[, "ANTIBODY"], sep = ".")
-    myCols <- combs$COLOR
+    myCols <- input[!duplicated(input$GROUP2), "COLOR"]
   }
-  combs <- table(input[, c("ANTIBODY", "GROUP")]) # row, antibody; col, group
-  allXs <- seq(ncol(combs) * (nrow(combs) + 1) - 1)
-  seperators <- seq(0, max(allXs), by = nrow(combs) + 1)[-1]
-  usedXs <- allXs[!allXs %in% seperators ]
   output <- paste0(prefix, "_boxplot.pdf")
   pdf(output, width = 7, height = 6)
   par(mfrow = c(1, 1), oma = c(0, 0, 0, 0), mar = c(10, 4, 2, 12))
   myTitle <- "ScalingFactor~GROUP+ANTIBODY"
-  bp <- boxplot(SF ~ GROUP + ANTIBODY,
+  nameOrder <- ordered(input$GROUP2, levels = groupLabels)
+  bp <- boxplot(SF ~ nameOrder,
     data = input, main = myTitle,
     las = 2, ylab = "Scaling Factors", xlab = "", cex.axis = 0.8, outline = T, col = myCols,
-    at = usedXs, cex.lab = 0.7, cex.main = 0.8
+    cex.lab = 0.7, cex.main = 0.8
   )
-  abline(v = seperators, col = "grey")
-  stripchart(SF ~ GROUP + ANTIBODY,
-    data = input[!input$SF %in% bp$out, ], vertical = T, at = usedXs,
+  stripchart(SF ~ nameOrder,
+    data = input[!input$SF %in% bp$out, ], vertical = T, 
     method = "jitter", add = TRUE, jitter = 0.2, cex = 0.7, pch = 1, col = "#595959"
   )
   par(xpd = T)
-  legend(x = max(allXs) + 1, y = max(input$SF), legend = groups, col = myCols, pch = 15, bty = "n", ncol = 1, cex = )
+  legend(x = length(groupLabels) + 1, y = max(input$SF), legend = groupLabels, col = myCols, pch = 15, bty = "n", ncol = 1, cex = )
   garbage <- dev.off()
   cat("\n\t", output, "[saved]")
   invisible(output)

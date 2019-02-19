@@ -1,4 +1,4 @@
-## ChIPseqSpikeInFree, 
+## ChIPseqSpikeInFree 
 A Spike-in Free ChIP-Seq Normalization Approach for Detecting Global Changes in Histone Modifications
 
 ## Background
