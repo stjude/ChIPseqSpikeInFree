@@ -12,7 +12,7 @@
 #' ## 1. generate a mm10 binFile without chr and use a binSize of 1000 bp
 #' ## and overlap of 500 bp between two consecutive bins
 #' 
-#' ## "mm10" will be parsed as system.file("extdata", "mm10.chrom.sizes", 
+#' ## "mm10" will be parsed as system.file("extdata", "mm10.chrom.sizes",
 #' ##       package = "ChIPseqSpikeInFree")
 #' # binDF <- GenerateBins(chromFile="mm10",binSize=1000, overlap=500,
 #' # withChr=FALSE,prefix="mm10")
@@ -84,7 +84,7 @@ GenerateBins <- function(chromFile, binSize = 1000, overlap = 0, withChr = TRUE)
 #' ## 1.count reads using mm9 bams
 #' # bams <- c("your/path/ChIPseq1.bam","your/path/ChIPseq2.bam")
 #' # rawCountDF <- CountRawReads(bamFiles=bams,chromFile="mm9",prefix="your/path/test",singleEnd=TRUE)
-CountRawReads <- function(bamFiles, chromFile = "hg19", prefix = "test", singleEnd = TRUE, binSize=1000) {
+CountRawReads <- function(bamFiles, chromFile = "hg19", prefix = "test", singleEnd = TRUE, binSize = 1000) {
   # count raw reads for every 1kb bin across genome
 
   # check chromosome notation in bam file
@@ -151,6 +151,13 @@ ReadMeta <- function(metaFile = "sample_meta.txt") {
   }
   meta <- read.table(metaFile, sep = "\t", header = TRUE, fill = TRUE, stringsAsFactors = FALSE, quote = "", check.names = F)
   colnames(meta) <- toupper(colnames(meta))
+  # check duplicate ID
+  if (sum(duplicated(meta$ID)) > 1) {
+    cat("\n**Warning: found duplicate ID(s) in your metaFile.**\n\n")
+    print(unique(meta$ID[duplicated(meta$ID)]))
+    cat("\nPlease correct your metaFile and then re-run the pipeline.\n\n")
+    quit("no")
+  }
   rownames(meta) <- meta$ID
   if (!"ID" %in% colnames(meta) | !"ANTIBODY" %in% colnames(meta) | !"GROUP" %in% colnames(meta)) {
     cat("\n**ERROR: Invalid meta file. **\n\tID, ANTIBODY, GROUP column(s) are required. COLOR column is optional.\n")
@@ -178,6 +185,7 @@ ReadMeta <- function(metaFile = "sample_meta.txt") {
 #' @param metaFile a data.frame of metadata by ReadMeta(); or a filename of metadata file.
 #' @param by step used to define cutoffs; ParseReadCounts will cumulatively calculate the percent of reads that pass the every cutoff.
 #' @param prefix prefix of output filename to save the parsedMatrix of (cutoff, and percent of reads accumulatively passed the cutoff in each sample).
+#' @param ncores number of cores for parallel computing.
 #' @return A data.frame of parsed data.
 #' @export
 #' @examples
@@ -204,7 +212,23 @@ ReadMeta <- function(metaFile = "sample_meta.txt") {
 #' # dat <- ParseReadCounts(data="your/path/test_rawCount.txt",
 #' # metaFile=metaFile, prefix="your/path/test")
 #' ## output file will be "your/path/test_parsedMatrix.txt"
-ParseReadCounts <- function(data, metaFile = "sample_meta.txt", by = 0.05, prefix = "test") {
+ParseReadCounts <- function(data, metaFile = "sample_meta.txt", by = 0.05, prefix = "test", ncores = 2) {
+  ######################################################
+  parParseRaw <- function(x, SEQ) {
+    totalCPM <- sum(x)
+    res <- NULL
+    pct <- NULL
+    for (K in SEQ) {
+      pct <- sum(x[x <= K]) / totalCPM
+      res <- c(res, pct)
+      if (ceiling(pct * 100) == 100) { # exit loop when 99% reads have been used
+        res <- c(res, rep(1, length(SEQ) - length(res)))
+        break
+      }
+    }
+    res
+  }
+  ######################################################
   if (class(metaFile) == "character") { # given a filename, need to load it
     metaFile <- ReadMeta(metaFile)
   }
@@ -220,40 +244,56 @@ ParseReadCounts <- function(data, metaFile = "sample_meta.txt", by = 0.05, prefi
     cat("\n** Oooops: you need to change metadata file **\n")
     stop("Please check whether you IDs in metaFile match with colnames(bam filenames) in parsedMatrix.\n\n")
   }
+
   metaFile <- metaFile[kept, ] # only use samples listed in metaFile
-  CPM <- apply(data, 2, function(x) {
-    x / sum(x) * 1000000
-  })
+  # Calculate the number of cores
+  avai_cores <- detectCores() - 1
+  ncores <- ifelse(ncores > avai_cores, avai_cores, ncores)
+  if (ncores > 1) {
+    cat(paste0("\n\tEnabling parallel computing ( ", ncores, " cores)...\n"))
+  }
+  # Initiate cluster
+  cl <- makeCluster(ncores)
+  clusterExport(cl, varlist = c("data"), envir = environment())
+  # calculate CPM
+  CPM <- parLapply(
+    cl, 1:ncol(data),
+    function(x) data[, x] / sum(data[, x]) * 1000000
+  )
+
+  CPM <- Reduce("cbind", CPM)
   colnames(CPM) <- colnames(data)
-  MAX <- apply(CPM, 2, max)
+  #  print(dim(CPM))
+  #  cat("\n\tCPM was calculateded.\n")
+  clusterExport(cl, varlist = "CPM", envir = environment())
+  # calculate data range and times of loop
+  MAX <- 0
+  MAX <- parLapply(
+    cl, 1:ncol(CPM),
+    function(x) max(CPM[, x])
+  )
+
+  MAX <- Reduce("cbind", MAX)
   MAX <- ceiling(max(MAX))
   SEQ <- seq(0, MAX, by = by) # smaller value, higher resolution
-  dat <- data.frame(cutoff = SEQ)
-  for (ind in 1:ncol(CPM)) {
-    cat("\n", colnames(CPM)[ind], "\n\t")
-    tmp <- CPM[, ind]
-    totalCPM <- sum(tmp)
-    res <- NULL
-    counter <- 0
-    for (K in SEQ) {
-      counter <- counter + 1
-      if (counter %% 100 == 0 | counter == 1) {
-        cat(paste0(counter, ".."))
-      }
-      pct <- sum(tmp[tmp <= K]) / totalCPM
-      res <- c(res, pct)
-      if (pct == 1) { # exit loop when all reads have been used
-        res <- c(res, rep(1, nrow(dat) - length(res)))
-        break
-      }
-    }
-    dat <- cbind(dat, res)
-    colnames(dat)[ncol(dat)] <- colnames(CPM)[ind]
-  }
+
+  clusterExport(cl, varlist = c("SEQ", "CPM", "parParseRaw"), envir = environment())
+  options(scipen = 999)
+  res <- parLapply(
+    cl, 1:ncol(CPM),
+    function(x) parParseRaw(CPM[, x], SEQ)
+  )
+  stopCluster(cl)
+  res <- Reduce("cbind", res)
+  # cat("\nCPM was parsed.\n")
+  colnames(res) <- colnames(CPM)
+
+  dat <- data.frame(cutoff = SEQ, res)
+  kept <- rowSums(res) != ncol(res) # delete rows with all 1
+  dat <- dat[kept, ]
   output <- paste0(prefix, "_parsedMatrix.txt")
   write.table(dat, output, sep = "\t", quote = F, row.names = F, col.names = T)
   cat("\n\t", output, "[saved]")
-
   return(dat)
 }
 
@@ -286,7 +326,7 @@ ParseReadCounts <- function(data, metaFile = "sample_meta.txt", by = 0.05, prefi
 #' #     prefix="your/path/test_parsedMatrix.txt")
 #' # res <- CalculateSF (data=parsedDF,metaFile=metaFile,
 #' #     prefix="your/path/test")
-CalculateSF <- function(data, metaFile = "sample_meta.txt", prefix = "test", dataRange = c(0.1, 0.99)) {
+CalculateSF <- function(data, metaFile = "sample_meta.txt", prefix = "test", dataRange = c(0.1, 0.99), xMAX = NA) {
   # calculate scaling factors
 
   pctMin <- dataRange[1]
@@ -312,7 +352,10 @@ CalculateSF <- function(data, metaFile = "sample_meta.txt", prefix = "test", dat
   imgOutput <- paste0(prefix, "_distribution.pdf")
   pdf(imgOutput, width = 6, height = 6)
   slopes <- NULL
-  MAX_CPM <- max(data[,1])
+  MAX_CPM <- max(data[, 1])
+  if (!is.na(xMAX)) {
+    MAX_CPM <- ifelse(xMAX < MAX_CPM, xMAX, MAX_CPM)
+  }
   for (r in 2:ncol(data)) {
     x <- data[, 1]
     y <- data[, r]
@@ -341,8 +384,8 @@ CalculateSF <- function(data, metaFile = "sample_meta.txt", prefix = "test", dat
     SF <- round(max(slopes[inds]) / slopes[inds], 2)
     meta$SF[inds] <- SF
   }
-
-  legend("bottomright", legend = paste(meta$ID, paste(",sf=", meta$SF, sep = ""), sep = ""), col = meta$COLOR, pch = 15, bty = "n", ncol = 1, cex = 0.8)
+  legFontSize <- ifelse(ncol(data) < 10, 0.8, 0.3 + 5 / ncol(data))
+  legend("bottomright", legend = paste(meta$ID, paste(",sf=", meta$SF, sep = ""), sep = ""), col = meta$COLOR, pch = 15, bty = "n", ncol = 1, cex = legFontSize)
   garbage <- dev.off()
   cat("\n\t", imgOutput, "[saved]")
   output <- paste0(prefix, "_SF.txt")
@@ -387,9 +430,9 @@ BoxplotSF <- function(input, prefix = "test") {
   if (!"SF" %in% colnames(input) || !"ANTIBODY" %in% colnames(input) || !"GROUP" %in% colnames(input)) {
     stop("Input looks invalid for BoxplotSF().\n")
   }
-    
-  input$GROUP2 <- paste(input$GROUP,input$ANTIBODY,sep=".")
-  input <- input[order(input$ANTIBODY,input$GROUP), ]
+
+  input$GROUP2 <- paste(input$GROUP, input$ANTIBODY, sep = ".")
+  input <- input[order(input$ANTIBODY, input$GROUP), ]
   groupLabels <- unique(input$GROUP2)
   if (!"COLOR" %in% colnames(input)) {
     tim10equal <- c("skyblue", "#EF0000", "grey", "#00DFFF", "#50FFAF", "#BFFF40", "#FFCF00", "#FF6000", "#0000FF", "#800000")
@@ -408,7 +451,7 @@ BoxplotSF <- function(input, prefix = "test") {
     cex.lab = 0.7, cex.main = 0.8
   )
   stripchart(SF ~ nameOrder,
-    data = input[!input$SF %in% bp$out, ], vertical = T, 
+    data = input[!input$SF %in% bp$out, ], vertical = T,
     method = "jitter", add = TRUE, jitter = 0.2, cex = 0.7, pch = 1, col = "#595959"
   )
   par(xpd = T)
@@ -428,7 +471,9 @@ BoxplotSF <- function(input, prefix = "test") {
 #' @param bamFiles a vector of bam filenames.
 #' @param chromFile chrom.size file. Given "hg19","mm10","mm9" or "hg38", will load chrom.size file from package folder.
 #' @param metaFile a filename of metadata file. the file must have three columns: ID (bam filename without full path), ANTIBODY and GROUP
-#' @param binSize size of bins (bp)
+#' @param binSize size of bins (bp). Recommend a value bwteen 200 and 2000
+#' @param dataRange set c(0.1 and 0.99) by default. The first 10 percent of noisy weakest reads were excluded and stop calculation when 99 percent of reads are used.
+#' @param ncores number of cores for parallel computing.
 #' @param prefix prefix of output filename.
 #' @return A data.frame of the updated metaFile with scaling factor
 #' @export
@@ -447,9 +492,18 @@ BoxplotSF <- function(input, prefix = "test") {
 #' 
 #' ## 3. run ChIPseqSpikeInFree pipeline
 #' # ChIPseqSpikeInFree(bamFiles=bams, chromFile="mm9",metaFile=metaFile,prefix="test")
-ChIPseqSpikeInFree <- function(bamFiles, chromFile = "hg19", metaFile = "sample_meta.txt", prefix = "test", binSize=1000) {
+ChIPseqSpikeInFree <- function(bamFiles, chromFile = "hg19",
+                               metaFile = "sample_meta.txt",
+                               prefix = "test", binSize = 1000,
+                               ncores = 2, dataRange = c(0.1, 0.99),
+                               xMAX = NA) {
   # perform ChIP-seq spike-free normalization in one step
-
+  if (length(dataRange) != 2 || sum(dataRange > 0) != 2 || sum(dataRange < 1) != 2) {
+    stop(paste0("**invalid dataRange argument**", dataRange, "\n"))
+  }
+  if (binSize < 100 && binSize >= 2000) {
+    cat(paste0("\n**recommended binSize range 200-5000 (bp); your binsize is", binSize, " **\n"))
+  }
   cat("\nstep1. loading metadata file...")
   meta <- ReadMeta(metaFile)
   cat("\n\t[--done--]\n")
@@ -462,7 +516,7 @@ ChIPseqSpikeInFree <- function(bamFiles, chromFile = "hg19", metaFile = "sample_
     cat("\n\t", output1, "[just loading the existing file; delete this file first to do re-counting ]")
     rawCountDF <- read.table(output1, sep = "\t", header = TRUE, fill = TRUE, stringsAsFactors = FALSE, quote = "", row.names = 1, check.names = F)
   } else {
-    rawCountDF <- CountRawReads(bamFiles = bamFiles, chromFile = chromFile, prefix = prefix, binSize=binSize)
+    rawCountDF <- CountRawReads(bamFiles = bamFiles, chromFile = chromFile, prefix = prefix, binSize = binSize)
   }
   cat("\n\t[--done--]\n")
   cat("\nstep3. parsing raw counts...")
@@ -473,12 +527,12 @@ ChIPseqSpikeInFree <- function(bamFiles, chromFile = "hg19", metaFile = "sample_
     cat("\n\t", output1, "[just loading the existing file; delete this file first to re-parse rawCount table]")
     parsedDF <- read.table(output2, sep = "\t", header = TRUE, fill = TRUE, stringsAsFactors = FALSE, quote = "", row.names = NULL, check.names = F)
   } else {
-    steps <- 0.05* binSize/1000
-    parsedDF <- ParseReadCounts(data = rawCountDF, metaFile = meta, prefix = prefix, by = steps)
+    steps <- 0.05 * binSize / 1000
+    parsedDF <- ParseReadCounts(data = rawCountDF, metaFile = meta, prefix = prefix, by = steps, ncores = ncores)
   }
   cat("\n\t[--done--]\n")
   cat("\nstep4. calculating scaling factors...")
-  result <- CalculateSF(data = parsedDF, metaFile = meta, prefix = prefix, dataRange = c(0.1, 0.99))
+  result <- CalculateSF(data = parsedDF, metaFile = meta, prefix = prefix, dataRange = dataRange, xMAX = xMAX)
   cat("\t[--done--]\n")
   cat("\nstep5. ploting scaling factors...")
   BoxplotSF(result, prefix)
