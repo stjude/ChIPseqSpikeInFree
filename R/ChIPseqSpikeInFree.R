@@ -177,14 +177,46 @@ ReadMeta <- function(metaFile = "sample_meta.txt") {
     return(NA)
   }
   if (!"COLOR" %in% colnames(meta)) {
-    myColors <- c(
-      "red", "blue", "green", "#F4B5BE", "#5F5647",
-      "#9C974A", "#9B110E", "#CDBF8B", "#3F5151",
-      "#F9D77A", "#4E2A1E", "#85D4E3", "#0C1707", "yellow", "grey"
-    )
+   # myColors <- c("red", "blue", "green", "#F4B5BE", "#5F5647", "#9C974A", "#9B110E", "#CDBF8B", "#3F5151","#F9D77A", "#4E2A1E", "#85D4E3", "#0C1707", "yellow", "grey" )
+   myColors <- c("turquoise","blue","brown","yellow","green","red","black","pink","magenta","purple","greenyellow","tan","salmon","cyan","midnightblue","lightcyan",
+        "grey60","lightgreen","lightyellow","royalblue","darkred","darkgreen","darkturquoise","darkgrey","orange","darkorange","white","skyblue",
+        "saddlebrown","steelblue","paleturquoise","violet","darkolivegreen","darkmagenta","sienna3","yellowgreen","skyblue3","plum1","orangered4","mediumpurple3",
+        "lightsteelblue1","lightcyan1","ivory","floralwhite","darkorange2","brown4","bisque4","darkslateblue","plum2","thistle2","thistle1","salmon4",
+        "palevioletred3","navajowhite2","maroon","lightpink4","lavenderblush3","honeydew1","darkseagreen4","coral1","antiquewhite4","coral2","mediumorchid","skyblue2",
+        "yellow4","skyblue1","plum","orangered3","mediumpurple2","lightsteelblue","lightcoral","indianred4","firebrick4","darkolivegreen4","brown2","blue2",
+        "darkviolet","plum3","thistle3","thistle","salmon2","palevioletred2","navajowhite1","magenta4","lightpink3","lavenderblush2","honeydew","darkseagreen3",
+        "coral","antiquewhite2","coral3","mediumpurple4","skyblue4","yellow3","sienna4","pink4","orangered1","mediumpurple1","lightslateblue","lightblue4",
+        "indianred3","firebrick3","darkolivegreen2","blueviolet","blue4","deeppink","plum4","thistle4","tan4","salmon1","palevioletred1","navajowhite",
+        "magenta3","lightpink2","lavenderblush1","green4","darkseagreen2","chocolate4","antiquewhite1","coral4","mistyrose","slateblue","yellow2","sienna2",
+        "pink3","orangered","mediumpurple","lightskyblue4","lightblue3","indianred2","firebrick2","darkolivegreen1","blue3","brown1","deeppink1","powderblue",
+        "tomato","tan3","royalblue3","palevioletred","moccasin","magenta2","lightpink1","lavenderblush","green3","darkseagreen1","chocolate3","aliceblue",
+        "cornflowerblue","navajowhite3","slateblue1","whitesmoke","sienna1","pink2","orange4","mediumorchid4","lightskyblue3","lightblue2","indianred1","firebrick",
+        "darkgoldenrod4","blue1","brown3","deeppink2","purple2","tomato2","tan2","royalblue2","paleturquoise4","mistyrose4","magenta1","lightpink",
+        "lavender","green2","darkseagreen","chocolate2","antiquewhite","cornsilk","navajowhite4","slateblue2","wheat3","sienna","pink1","orange3",
+        "mediumorchid3","lightskyblue2","lightblue1","indianred","dodgerblue4","darkgoldenrod3","blanchedalmond","burlywood","deepskyblue","red1","tomato4","tan1",
+        "rosybrown4","paleturquoise3","mistyrose3","linen","lightgoldenrodyellow","khaki4","green1","darksalmon","chocolate1","antiquewhite3","cornsilk2","oldlace",
+        "slateblue3","wheat1","seashell4","peru","orange2","mediumorchid2","lightskyblue1","lightblue","hotpink4","dodgerblue3","darkgoldenrod1","bisque3",
+        "burlywood1","deepskyblue4","red4","turquoise2","steelblue4","rosybrown3","paleturquoise1","mistyrose2","limegreen","lightgoldenrod4","khaki3","goldenrod4",
+        "darkorchid4","chocolate","aquamarine","cyan1","orange1","slateblue4","violetred4","seashell3","peachpuff4","olivedrab4","mediumorchid1","lightskyblue",
+        "lemonchiffon4","hotpink3","dodgerblue1","darkgoldenrod","bisque2","burlywood2","dodgerblue2","rosybrown2","turquoise4","steelblue3","rosybrown1","palegreen4",
+        "mistyrose1","lightyellow4","lightgoldenrod3","khaki2","goldenrod3","darkorchid3","chartreuse4","aquamarine1","cyan4","orangered2","snow","violetred2",
+        "seashell2","peachpuff3","olivedrab3","mediumblue","lightseagreen","lemonchiffon3","hotpink2","dodgerblue","darkblue","bisque1","burlywood3","firebrick1",
+        "royalblue1","violetred1","steelblue1","rosybrown","palegreen3","mintcream","lightyellow3","lightgoldenrod2","khaki1","goldenrod2","darkorchid2","chartreuse3",
+        "aquamarine2","darkcyan","orchid","snow2","violetred","seashell1","peachpuff2","olivedrab2","mediumaquamarine","lightsalmon4","lemonchiffon2","hotpink1",
+        "deepskyblue3","cyan3","bisque","burlywood4","forestgreen","royalblue4","violetred3","springgreen3","red3","palegreen1","mediumvioletred","lightyellow2",
+        "lightgoldenrod1","khaki","goldenrod1","darkorchid1","chartreuse2","aquamarine3","darkgoldenrod2","orchid1","snow4","turquoise3","seashell","peachpuff1",
+        "olivedrab1","maroon4","lightsalmon3","lemonchiffon1","hotpink","deepskyblue2","cyan2","beige","cadetblue","gainsboro","salmon3","wheat",
+        "springgreen2","red2","palegreen","mediumturquoise","lightyellow1","lightgoldenrod","ivory4","goldenrod","darkorchid","chartreuse1","aquamarine4","darkkhaki",
+        "orchid3","springgreen1","turquoise1","seagreen4","peachpuff","olivedrab","maroon3","lightsalmon2","lemonchiffon","honeydew4","deepskyblue1","cornsilk4",
+        "azure4","cadetblue1","ghostwhite","sandybrown","wheat2","springgreen","purple4","palegoldenrod","mediumspringgreen","lightsteelblue4","lightcyan4","ivory3",
+        "gold3","darkorange4","chartreuse","azure","darkolivegreen3","palegreen2","springgreen4","tomato3","seagreen3","papayawhip","navyblue","maroon2",
+        "lightsalmon1","lawngreen","honeydew3","deeppink4","cornsilk3","azure3","cadetblue2","gold","seagreen","wheat4","snow3","purple3",
+        "orchid4","mediumslateblue","lightsteelblue3","lightcyan3","ivory2","gold2","darkorange3","cadetblue4","azure1","darkorange1","paleturquoise2","steelblue2",
+        "tomato1","seagreen2","palevioletred4","navy","maroon1","lightsalmon","lavenderblush4","honeydew2","deeppink3","cornsilk1","azure2","cadetblue3",
+        "gold4","seagreen1","yellow1","snow1","purple1","orchid2","mediumseagreen","lightsteelblue2","lightcyan2","ivory1","gold1");
     groupNum <- as.numeric(factor(paste(meta$ANTIBODY, meta$GROUP, sep = "")))
     meta$COLOR <- myColors[groupNum]
-  }
+        }
   invisible(meta)
 }
 
@@ -228,14 +260,14 @@ ReadMeta <- function(metaFile = "sample_meta.txt") {
 ParseReadCounts <- function(data, metaFile = "sample_meta.txt", by = 0.05, prefix = "test", binSize = 1000, ncores = 2) {
   ######################################################
   parParseRaw <- function(x, SEQ) {
-    x <- x[x>0]
+    x <- x[x>0 ] 
     totalCPM <- sum(x)
     res <- NULL
     pct <- NULL
     for (K in SEQ) {
       pct <- sum(x[x <= K]) / totalCPM
       res <- c(res, pct)
-      if (ceiling(pct * 100) == 100) { # exit loop when 99% reads have been used
+      if (pct > 0.999) { # exit loop when 99.9% reads have been used
         res <- c(res, rep(1, length(SEQ) - length(res)))
         break
       }
@@ -274,12 +306,17 @@ ParseReadCounts <- function(data, metaFile = "sample_meta.txt", by = 0.05, prefi
     cl, 1:ncol(data),
     function(x) data[, x] / sum(data[, x]) * 1000000 * ( 1000 / binSize )
   )
-
+  
   CPM <- Reduce("cbind", CPM)
   colnames(CPM) <- colnames(data)
   #  print(dim(CPM))
   #  cat("\n\tCPM was calculateded.\n")
+
+  # remove extreme values potential from centromere regions
+  MAX_CPMW <- 150
+  CPM[rowSums(CPM >MAX_CPMW)>0,]  <- 0
   clusterExport(cl, varlist = "CPM", envir = environment())
+
   # calculate data range and times of loop
   MAX <- 0
   MAX <- parLapply(
@@ -290,15 +327,10 @@ ParseReadCounts <- function(data, metaFile = "sample_meta.txt", by = 0.05, prefi
   MAX <- Reduce("cbind", MAX)
   MAX <- as.numeric(ceiling(max(MAX)))
   SEQ <- seq(0, MAX, by = by) 
-  cat("\nMAX=",MAX,"SEQ=",length(SEQ),"\n")
+  #cat("\n\tMAX = ",MAX,"SEQ = ",length(SEQ),"\n")
   if (by > MAX || length(SEQ) <100){
     by <- MAX/100
     SEQ <- seq(0, MAX, by = by)
-  }
-  if (MAX > 5000){
-    cat("\n**Warning: Extreme large CPM values.**" )
-    cat("\n\tPlease remove duplicate reads and spike-in reads from ChIP-seq bam files")
-    cat("\n\tAnd then re-run the pipeline\n\n")
   }
 
   clusterExport(cl, varlist = c("SEQ", "CPM", "parParseRaw"), envir = environment())
@@ -411,17 +443,18 @@ CalculateSF <- function(data, metaFile = "sample_meta.txt", prefix = "test", dat
   }  
   legFontSize <- ifelse(ncol(data) < 10, 0.8, 0.3 + 5 / ncol(data))
   legend("bottomright", legend = paste(meta$ID, paste(",sf=", meta$SF, sep = ""), sep = ""), col = meta$COLOR, pch = 15, bty = "n", ncol = 1, cex = legFontSize)
-  #garbage <- dev.off()
-  #cat("\n\t", imgOutput, "[saved]")
 
-    #--------plot each antibody individually------------------------------
+   #--------plot each antibody individually------------------------------
   if (length(unique(meta$ANTIBODY))>1 ){
-      #imgOutput <- paste0(prefix, "_distribution2.pdf")
-      #pdf(imgOutput, width = 6, height = 6)
       slopesByAb <- NULL
       for (ab in unique(meta$ANTIBODY)) {
         metaByAb <- meta[meta$ANTIBODY == ab,]
         subsetByAb <- data[,metaByAb$ID]
+        # delete rows where all values are out of dataRange 9
+        kept <- rowSums(subsetByAb > 0.99 ) != ncol(subsetByAb) 
+        x <- data[kept, 1]
+        subsetByAb <- subsetByAb[kept, ]
+        MAX_CPM <- max(x)
         for (r in 1:ncol(subsetByAb)) {
             y <- subsetByAb[, r]
             used <- data.frame(x = x, y = y)
