@@ -33,6 +33,9 @@ GenerateBins <- function(chromFile, binSize = 1000, overlap = 0, withChr = TRUE)
       stop(paste0("\nchromFile was not found:", chromFile, "\n"))
     }
   }
+    if (binSize < 200 && binSize > 10000 ){
+     stop(paste0("\n**Recommended binSize range 200 ~ 10000 (bp); Your binsize is", binSize," **\n"))
+  }
   cat(paste0("\n\tFollowing file will be used to generate sliding windows: ", basename(chromFile)))
   chromSize <- read.table(chromFile, sep = "\t", header = F, fill = TRUE, quote = "")
   options(scipen = 999) # disable scientific notation when writing out
@@ -73,7 +76,7 @@ GenerateBins <- function(chromFile, binSize = 1000, overlap = 0, withChr = TRUE)
 #' @param chromFile a chrom.size file. Given "hg19","mm10","mm9" or "hg38", will load chrom.size file from package folder. Otherwise, give a /your/path/chrom.size
 #' @param prefix prefix of output file name
 #' @param singleEnd To count paired-end reads, set argument singleEnd=FALSE
-#' @param binSize size of bins (bp)
+#' @param binSize size of bins (bp). Recommend a value bwteen 200 and 10000
 #' @return a data.frame of raw counts for each bin
 #' @import Rsamtools
 #' @import GenomicRanges
@@ -86,7 +89,16 @@ GenerateBins <- function(chromFile, binSize = 1000, overlap = 0, withChr = TRUE)
 #' # rawCountDF <- CountRawReads(bamFiles=bams,chromFile="mm9",prefix="your/path/test",singleEnd=TRUE)
 CountRawReads <- function(bamFiles, chromFile = "hg19", prefix = "test", singleEnd = TRUE, binSize = 1000) {
   # count raw reads for every 1kb bin across genome
-
+  # check file
+  if(sum(! file.exists(bamFiles))>0){
+    cat("\n** some bam files are unavailable:**")
+    cat("\t",bamFiles[!file.exists(bamFiles)],"\n")
+    stop("Invalid bam file list!")
+  }
+  
+  if (binSize < 200 && binSize > 10000 ){
+     stop(paste0("\n**Recommended binSize range 200 ~ 10000 (bp); Your binsize is", binSize," **\n"))
+  }
   # check chromosome notation in bam file
   bamHeader <- scanBamHeader(bamFiles[1])
   chrFlag <- grepl("SN:chr", bamHeader[[1]]$text[2])
@@ -185,6 +197,7 @@ ReadMeta <- function(metaFile = "sample_meta.txt") {
 #' @param metaFile a data.frame of metadata by ReadMeta(); or a filename of metadata file.
 #' @param by step used to define cutoffs; ParseReadCounts will cumulatively calculate the percent of reads that pass the every cutoff.
 #' @param prefix prefix of output filename to save the parsedMatrix of (cutoff, and percent of reads accumulatively passed the cutoff in each sample).
+#' @param binSize size of bins (bp). Recommend a value bwteen 200 and 10000
 #' @param ncores number of cores for parallel computing.
 #' @return A data.frame of parsed data.
 #' @export
@@ -212,7 +225,7 @@ ReadMeta <- function(metaFile = "sample_meta.txt") {
 #' # dat <- ParseReadCounts(data="your/path/test_rawCount.txt",
 #' # metaFile=metaFile, prefix="your/path/test")
 #' ## output file will be "your/path/test_parsedMatrix.txt"
-ParseReadCounts <- function(data, metaFile = "sample_meta.txt", by = 0.05, prefix = "test", ncores = 2) {
+ParseReadCounts <- function(data, metaFile = "sample_meta.txt", by = 0.05, prefix = "test", binSize = 1000, ncores = 2) {
   ######################################################
   parParseRaw <- function(x, SEQ) {
     totalCPM <- sum(x)
@@ -258,7 +271,7 @@ ParseReadCounts <- function(data, metaFile = "sample_meta.txt", by = 0.05, prefi
   # calculate CPM
   CPM <- parLapply(
     cl, 1:ncol(data),
-    function(x) data[, x] / sum(data[, x]) * 1000000
+    function(x) data[, x] / sum(data[, x]) * 1000000 * ( 1000 / binSize )
   )
 
   CPM <- Reduce("cbind", CPM)
@@ -274,8 +287,18 @@ ParseReadCounts <- function(data, metaFile = "sample_meta.txt", by = 0.05, prefi
   )
 
   MAX <- Reduce("cbind", MAX)
-  MAX <- ceiling(max(MAX))
-  SEQ <- seq(0, MAX, by = by) # smaller value, higher resolution
+  MAX <- as.numeric(ceiling(max(MAX)))
+  SEQ <- seq(0, MAX, by = by) 
+  cat("\nMAX=",MAX,"SEQ=",length(SEQ),"\n")
+  if (by > MAX || length(SEQ) <100){
+    by <- MAX/100
+    SEQ <- seq(0, MAX, by = by)
+  }
+  if (MAX > 5000){
+    cat("\n**Warning: Extreme large CPM values.**" )
+    cat("\n\tPlease remove duplicate reads and spike-in reads from ChIP-seq bam files")
+    cat("\n\tAnd then re-run the pipeline\n\n")
+  }
 
   clusterExport(cl, varlist = c("SEQ", "CPM", "parParseRaw"), envir = environment())
   options(scipen = 999)
@@ -288,7 +311,7 @@ ParseReadCounts <- function(data, metaFile = "sample_meta.txt", by = 0.05, prefi
   # cat("\nCPM was parsed.\n")
   colnames(res) <- colnames(CPM)
 
-  dat <- data.frame(cutoff = SEQ, res)
+  dat <- data.frame(cutoff = SEQ, res, check.names = F)
   kept <- rowSums(res) != ncol(res) # delete rows with all 1
   dat <- dat[kept, ]
   output <- paste0(prefix, "_parsedMatrix.txt")
@@ -356,8 +379,9 @@ CalculateSF <- function(data, metaFile = "sample_meta.txt", prefix = "test", dat
   if (!is.na(xMAX)) {
     MAX_CPM <- ifelse(xMAX < MAX_CPM, xMAX, MAX_CPM)
   }
+  #---------plot all samples-------------------------------------
+  x <- data[, 1]
   for (r in 2:ncol(data)) {
-    x <- data[, 1]
     y <- data[, r]
     used <- data.frame(x = x, y = y)
     used <- na.omit(used)
@@ -369,8 +393,8 @@ CalculateSF <- function(data, metaFile = "sample_meta.txt", prefix = "test", dat
     slopes <- c(slopes, slope)
     if (r == 2) {
       plot(used,
-        main = imgOutput, col = meta$COLOR[r - 1], lwd = 2, xlab = "cutoff (CPMW)",
-        cex = 0.8, cex.main = 0.5, type = "l", ylab = "Proportion of reads", xlim = c(0, MAX_CPM), ylim = c(0.0, 1.1)
+        main = paste("all samples","\n",imgOutput), col = meta$COLOR[r - 1], lwd = 2, xlab = "cutoff (CPMW)",
+        cex = 0.8, cex.main = 0.8, type = "l", ylab = "Proportion of reads", xlim = c(0, MAX_CPM), ylim = c(0.0, 1.1)
       )
     } else {
       lines(used, col = meta$COLOR[r - 1], lty = 1, lwd = 2, pch = 20, cex = 0.1)
@@ -383,11 +407,49 @@ CalculateSF <- function(data, metaFile = "sample_meta.txt", prefix = "test", dat
     inds <- grep(ab, meta$ANTIBODY)
     SF <- round(max(slopes[inds]) / slopes[inds], 2)
     meta$SF[inds] <- SF
-  }
+  }  
   legFontSize <- ifelse(ncol(data) < 10, 0.8, 0.3 + 5 / ncol(data))
   legend("bottomright", legend = paste(meta$ID, paste(",sf=", meta$SF, sep = ""), sep = ""), col = meta$COLOR, pch = 15, bty = "n", ncol = 1, cex = legFontSize)
-  garbage <- dev.off()
-  cat("\n\t", imgOutput, "[saved]")
+  #garbage <- dev.off()
+  #cat("\n\t", imgOutput, "[saved]")
+
+    #--------plot each antibody individually------------------------------
+  if (length(unique(meta$ANTIBODY))>1 ){
+      #imgOutput <- paste0(prefix, "_distribution2.pdf")
+      #pdf(imgOutput, width = 6, height = 6)
+      slopesByAb <- NULL
+      for (ab in unique(meta$ANTIBODY)) {
+        metaByAb <- meta[meta$ANTIBODY == ab,]
+        subsetByAb <- data[,metaByAb$ID]
+        for (r in 1:ncol(subsetByAb)) {
+            y <- subsetByAb[, r]
+            used <- data.frame(x = x, y = y)
+            used <- na.omit(used)
+            yMin <- y[sum(y < pctMin)]
+            yMax <- y[sum(y < pctMAX)]
+            xMin <- min(used$x[used$y == yMin])
+            xMax <- max(used$x[used$y == yMax])
+            slopeByAb <- round((yMax - yMin) / (xMax - xMin), 5)
+            slopesByAb <- c(slopesByAb, slopeByAb)
+            if (r == 1) {
+              plot(used,
+                main = paste(ab,"\n",imgOutput), col = metaByAb$COLOR[r], lwd = 2, xlab = "cutoff (CPMW)",
+                cex = 0.8, cex.main = 0.8, type = "l", ylab = "Proportion of reads", xlim = c(0, MAX_CPM), ylim = c(0.0, 1.1)
+              )
+            } else {
+              lines(used, col = metaByAb$COLOR[r], lty = 1, lwd = 2, pch = 20, cex = 0.1)
+            }
+            lines(x = c(xMin, xMax), y = c(yMin, yMax), col = "blue", lty = 3)
+        }
+        legFontSize <- ifelse(ncol(subsetByAb) < 10, 0.8, 0.3 + 5 / ncol(subsetByAb))
+        legend("bottomright", legend = paste(metaByAb$ID, paste(",sf=", metaByAb$SF, sep = ""), sep = ""), col = metaByAb$COLOR, pch = 15, bty = "n", ncol = 1, cex = legFontSize)
+      }
+    }
+    garbage <- dev.off()
+    cat("\n\t", imgOutput, "[saved]")
+
+
+
   output <- paste0(prefix, "_SF.txt")
   outDF <- meta[, !colnames(meta) %in% "SLOPE"]
   write.table(outDF, output, sep = "\t", quote = F, row.names = F, col.names = T)
@@ -471,7 +533,7 @@ BoxplotSF <- function(input, prefix = "test") {
 #' @param bamFiles a vector of bam filenames.
 #' @param chromFile chrom.size file. Given "hg19","mm10","mm9" or "hg38", will load chrom.size file from package folder.
 #' @param metaFile a filename of metadata file. the file must have three columns: ID (bam filename without full path), ANTIBODY and GROUP
-#' @param binSize size of bins (bp). Recommend a value bwteen 200 and 2000
+#' @param binSize size of bins (bp). Recommend a value bwteen 200 and 10000
 #' @param dataRange set c(0.1 and 0.99) by default. The first 10 percent of noisy weakest reads were excluded and stop calculation when 99 percent of reads are used.
 #' @param ncores number of cores for parallel computing.
 #' @param prefix prefix of output filename.
@@ -501,8 +563,8 @@ ChIPseqSpikeInFree <- function(bamFiles, chromFile = "hg19",
   if (length(dataRange) != 2 || sum(dataRange > 0) != 2 || sum(dataRange < 1) != 2) {
     stop(paste0("**invalid dataRange argument**", dataRange, "\n"))
   }
-  if (binSize < 100 && binSize >= 2000) {
-    cat(paste0("\n**recommended binSize range 200-5000 (bp); your binsize is", binSize, " **\n"))
+  if (binSize < 100 && binSize > 10000) {
+    cat(paste0("\n**recommended binSize range 200~10000 (bp); your binSize is", binSize, " **\n"))
   }
   cat("\nstep1. loading metadata file...")
   meta <- ReadMeta(metaFile)
@@ -524,11 +586,11 @@ ChIPseqSpikeInFree <- function(bamFiles, chromFile = "hg19",
 
   # in case of downstream errors, just load existing outFile to avoid re-processing raw counts
   if (file.exists(output2) && disableOverwritten) {
-    cat("\n\t", output1, "[just loading the existing file; delete this file first to re-parse rawCount table]")
+    cat("\n\t", output2, "[just loading the existing file; delete this file first to re-parse rawCount table]")
     parsedDF <- read.table(output2, sep = "\t", header = TRUE, fill = TRUE, stringsAsFactors = FALSE, quote = "", row.names = NULL, check.names = F)
   } else {
     steps <- 0.05 * binSize / 1000
-    parsedDF <- ParseReadCounts(data = rawCountDF, metaFile = meta, prefix = prefix, by = steps, ncores = ncores)
+    parsedDF <- ParseReadCounts(data = rawCountDF, metaFile = meta, prefix = prefix, by = steps, binSize = binSize, ncores = ncores)
   }
   cat("\n\t[--done--]\n")
   cat("\nstep4. calculating scaling factors...")
