@@ -228,6 +228,7 @@ ReadMeta <- function(metaFile = "sample_meta.txt") {
 ParseReadCounts <- function(data, metaFile = "sample_meta.txt", by = 0.05, prefix = "test", binSize = 1000, ncores = 2) {
   ######################################################
   parParseRaw <- function(x, SEQ) {
+    x <- x[x>0]
     totalCPM <- sum(x)
     res <- NULL
     pct <- NULL
