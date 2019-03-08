@@ -33,8 +33,8 @@ GenerateBins <- function(chromFile, binSize = 1000, overlap = 0, withChr = TRUE)
       stop(paste0("\nchromFile was not found:", chromFile, "\n"))
     }
   }
-    if (binSize < 200 && binSize > 10000 ){
-     stop(paste0("\n**Recommended binSize range 200 ~ 10000 (bp); Your binSize is", binSize," **\n"))
+  if (binSize < 200 && binSize > 10000) {
+    stop(paste0("\n**Recommended binSize range 200 ~ 10000 (bp); Your binSize is", binSize, " **\n"))
   }
   cat(paste0("\n\tFollowing file will be used to generate sliding windows: ", basename(chromFile)))
   chromSize <- read.table(chromFile, sep = "\t", header = F, fill = TRUE, quote = "")
@@ -90,14 +90,14 @@ GenerateBins <- function(chromFile, binSize = 1000, overlap = 0, withChr = TRUE)
 CountRawReads <- function(bamFiles, chromFile = "hg19", prefix = "test", singleEnd = TRUE, binSize = 1000) {
   # count raw reads for every 1kb bin across genome
   # check file
-  if(sum(! file.exists(bamFiles))>0){
+  if (sum(!file.exists(bamFiles)) > 0) {
     cat("\n** some bam files are unavailable:**")
-    cat("\t",bamFiles[!file.exists(bamFiles)],"\n")
+    cat("\t", bamFiles[!file.exists(bamFiles)], "\n")
     stop("Invalid bam file list!")
   }
-  
-  if (binSize < 200 && binSize > 10000 ){
-     stop(paste0("\n**Recommended binSize range 200 ~ 10000 (bp); Your binsize is", binSize," **\n"))
+
+  if (binSize < 200 && binSize > 10000) {
+    stop(paste0("\n**Recommended binSize range 200 ~ 10000 (bp); Your binsize is", binSize, " **\n"))
   }
   # check chromosome notation in bam file
   bamHeader <- scanBamHeader(bamFiles[1])
@@ -177,46 +177,48 @@ ReadMeta <- function(metaFile = "sample_meta.txt") {
     return(NA)
   }
   if (!"COLOR" %in% colnames(meta)) {
-   # myColors <- c("red", "blue", "green", "#F4B5BE", "#5F5647", "#9C974A", "#9B110E", "#CDBF8B", "#3F5151","#F9D77A", "#4E2A1E", "#85D4E3", "#0C1707", "yellow", "grey" )
-   myColors <- c("turquoise","blue","brown","yellow","green","red","black","pink","magenta","purple","greenyellow","tan","salmon","cyan","midnightblue","lightcyan",
-        "grey60","lightgreen","lightyellow","royalblue","darkred","darkgreen","darkturquoise","darkgrey","orange","darkorange","white","skyblue",
-        "saddlebrown","steelblue","paleturquoise","violet","darkolivegreen","darkmagenta","sienna3","yellowgreen","skyblue3","plum1","orangered4","mediumpurple3",
-        "lightsteelblue1","lightcyan1","ivory","floralwhite","darkorange2","brown4","bisque4","darkslateblue","plum2","thistle2","thistle1","salmon4",
-        "palevioletred3","navajowhite2","maroon","lightpink4","lavenderblush3","honeydew1","darkseagreen4","coral1","antiquewhite4","coral2","mediumorchid","skyblue2",
-        "yellow4","skyblue1","plum","orangered3","mediumpurple2","lightsteelblue","lightcoral","indianred4","firebrick4","darkolivegreen4","brown2","blue2",
-        "darkviolet","plum3","thistle3","thistle","salmon2","palevioletred2","navajowhite1","magenta4","lightpink3","lavenderblush2","honeydew","darkseagreen3",
-        "coral","antiquewhite2","coral3","mediumpurple4","skyblue4","yellow3","sienna4","pink4","orangered1","mediumpurple1","lightslateblue","lightblue4",
-        "indianred3","firebrick3","darkolivegreen2","blueviolet","blue4","deeppink","plum4","thistle4","tan4","salmon1","palevioletred1","navajowhite",
-        "magenta3","lightpink2","lavenderblush1","green4","darkseagreen2","chocolate4","antiquewhite1","coral4","mistyrose","slateblue","yellow2","sienna2",
-        "pink3","orangered","mediumpurple","lightskyblue4","lightblue3","indianred2","firebrick2","darkolivegreen1","blue3","brown1","deeppink1","powderblue",
-        "tomato","tan3","royalblue3","palevioletred","moccasin","magenta2","lightpink1","lavenderblush","green3","darkseagreen1","chocolate3","aliceblue",
-        "cornflowerblue","navajowhite3","slateblue1","whitesmoke","sienna1","pink2","orange4","mediumorchid4","lightskyblue3","lightblue2","indianred1","firebrick",
-        "darkgoldenrod4","blue1","brown3","deeppink2","purple2","tomato2","tan2","royalblue2","paleturquoise4","mistyrose4","magenta1","lightpink",
-        "lavender","green2","darkseagreen","chocolate2","antiquewhite","cornsilk","navajowhite4","slateblue2","wheat3","sienna","pink1","orange3",
-        "mediumorchid3","lightskyblue2","lightblue1","indianred","dodgerblue4","darkgoldenrod3","blanchedalmond","burlywood","deepskyblue","red1","tomato4","tan1",
-        "rosybrown4","paleturquoise3","mistyrose3","linen","lightgoldenrodyellow","khaki4","green1","darksalmon","chocolate1","antiquewhite3","cornsilk2","oldlace",
-        "slateblue3","wheat1","seashell4","peru","orange2","mediumorchid2","lightskyblue1","lightblue","hotpink4","dodgerblue3","darkgoldenrod1","bisque3",
-        "burlywood1","deepskyblue4","red4","turquoise2","steelblue4","rosybrown3","paleturquoise1","mistyrose2","limegreen","lightgoldenrod4","khaki3","goldenrod4",
-        "darkorchid4","chocolate","aquamarine","cyan1","orange1","slateblue4","violetred4","seashell3","peachpuff4","olivedrab4","mediumorchid1","lightskyblue",
-        "lemonchiffon4","hotpink3","dodgerblue1","darkgoldenrod","bisque2","burlywood2","dodgerblue2","rosybrown2","turquoise4","steelblue3","rosybrown1","palegreen4",
-        "mistyrose1","lightyellow4","lightgoldenrod3","khaki2","goldenrod3","darkorchid3","chartreuse4","aquamarine1","cyan4","orangered2","snow","violetred2",
-        "seashell2","peachpuff3","olivedrab3","mediumblue","lightseagreen","lemonchiffon3","hotpink2","dodgerblue","darkblue","bisque1","burlywood3","firebrick1",
-        "royalblue1","violetred1","steelblue1","rosybrown","palegreen3","mintcream","lightyellow3","lightgoldenrod2","khaki1","goldenrod2","darkorchid2","chartreuse3",
-        "aquamarine2","darkcyan","orchid","snow2","violetred","seashell1","peachpuff2","olivedrab2","mediumaquamarine","lightsalmon4","lemonchiffon2","hotpink1",
-        "deepskyblue3","cyan3","bisque","burlywood4","forestgreen","royalblue4","violetred3","springgreen3","red3","palegreen1","mediumvioletred","lightyellow2",
-        "lightgoldenrod1","khaki","goldenrod1","darkorchid1","chartreuse2","aquamarine3","darkgoldenrod2","orchid1","snow4","turquoise3","seashell","peachpuff1",
-        "olivedrab1","maroon4","lightsalmon3","lemonchiffon1","hotpink","deepskyblue2","cyan2","beige","cadetblue","gainsboro","salmon3","wheat",
-        "springgreen2","red2","palegreen","mediumturquoise","lightyellow1","lightgoldenrod","ivory4","goldenrod","darkorchid","chartreuse1","aquamarine4","darkkhaki",
-        "orchid3","springgreen1","turquoise1","seagreen4","peachpuff","olivedrab","maroon3","lightsalmon2","lemonchiffon","honeydew4","deepskyblue1","cornsilk4",
-        "azure4","cadetblue1","ghostwhite","sandybrown","wheat2","springgreen","purple4","palegoldenrod","mediumspringgreen","lightsteelblue4","lightcyan4","ivory3",
-        "gold3","darkorange4","chartreuse","azure","darkolivegreen3","palegreen2","springgreen4","tomato3","seagreen3","papayawhip","navyblue","maroon2",
-        "lightsalmon1","lawngreen","honeydew3","deeppink4","cornsilk3","azure3","cadetblue2","gold","seagreen","wheat4","snow3","purple3",
-        "orchid4","mediumslateblue","lightsteelblue3","lightcyan3","ivory2","gold2","darkorange3","cadetblue4","azure1","darkorange1","paleturquoise2","steelblue2",
-        "tomato1","seagreen2","palevioletred4","navy","maroon1","lightsalmon","lavenderblush4","honeydew2","deeppink3","cornsilk1","azure2","cadetblue3",
-        "gold4","seagreen1","yellow1","snow1","purple1","orchid2","mediumseagreen","lightsteelblue2","lightcyan2","ivory1","gold1");
+    # myColors <- c("red", "blue", "green", "#F4B5BE", "#5F5647", "#9C974A", "#9B110E", "#CDBF8B", "#3F5151","#F9D77A", "#4E2A1E", "#85D4E3", "#0C1707", "yellow", "grey" )
+    myColors <- c(
+      "turquoise", "blue", "brown", "yellow", "green", "red", "black", "pink", "magenta", "purple", "greenyellow", "tan", "salmon", "cyan", "midnightblue", "lightcyan",
+      "grey60", "lightgreen", "lightyellow", "royalblue", "darkred", "darkgreen", "darkturquoise", "darkgrey", "orange", "darkorange", "white", "skyblue",
+      "saddlebrown", "steelblue", "paleturquoise", "violet", "darkolivegreen", "darkmagenta", "sienna3", "yellowgreen", "skyblue3", "plum1", "orangered4", "mediumpurple3",
+      "lightsteelblue1", "lightcyan1", "ivory", "floralwhite", "darkorange2", "brown4", "bisque4", "darkslateblue", "plum2", "thistle2", "thistle1", "salmon4",
+      "palevioletred3", "navajowhite2", "maroon", "lightpink4", "lavenderblush3", "honeydew1", "darkseagreen4", "coral1", "antiquewhite4", "coral2", "mediumorchid", "skyblue2",
+      "yellow4", "skyblue1", "plum", "orangered3", "mediumpurple2", "lightsteelblue", "lightcoral", "indianred4", "firebrick4", "darkolivegreen4", "brown2", "blue2",
+      "darkviolet", "plum3", "thistle3", "thistle", "salmon2", "palevioletred2", "navajowhite1", "magenta4", "lightpink3", "lavenderblush2", "honeydew", "darkseagreen3",
+      "coral", "antiquewhite2", "coral3", "mediumpurple4", "skyblue4", "yellow3", "sienna4", "pink4", "orangered1", "mediumpurple1", "lightslateblue", "lightblue4",
+      "indianred3", "firebrick3", "darkolivegreen2", "blueviolet", "blue4", "deeppink", "plum4", "thistle4", "tan4", "salmon1", "palevioletred1", "navajowhite",
+      "magenta3", "lightpink2", "lavenderblush1", "green4", "darkseagreen2", "chocolate4", "antiquewhite1", "coral4", "mistyrose", "slateblue", "yellow2", "sienna2",
+      "pink3", "orangered", "mediumpurple", "lightskyblue4", "lightblue3", "indianred2", "firebrick2", "darkolivegreen1", "blue3", "brown1", "deeppink1", "powderblue",
+      "tomato", "tan3", "royalblue3", "palevioletred", "moccasin", "magenta2", "lightpink1", "lavenderblush", "green3", "darkseagreen1", "chocolate3", "aliceblue",
+      "cornflowerblue", "navajowhite3", "slateblue1", "whitesmoke", "sienna1", "pink2", "orange4", "mediumorchid4", "lightskyblue3", "lightblue2", "indianred1", "firebrick",
+      "darkgoldenrod4", "blue1", "brown3", "deeppink2", "purple2", "tomato2", "tan2", "royalblue2", "paleturquoise4", "mistyrose4", "magenta1", "lightpink",
+      "lavender", "green2", "darkseagreen", "chocolate2", "antiquewhite", "cornsilk", "navajowhite4", "slateblue2", "wheat3", "sienna", "pink1", "orange3",
+      "mediumorchid3", "lightskyblue2", "lightblue1", "indianred", "dodgerblue4", "darkgoldenrod3", "blanchedalmond", "burlywood", "deepskyblue", "red1", "tomato4", "tan1",
+      "rosybrown4", "paleturquoise3", "mistyrose3", "linen", "lightgoldenrodyellow", "khaki4", "green1", "darksalmon", "chocolate1", "antiquewhite3", "cornsilk2", "oldlace",
+      "slateblue3", "wheat1", "seashell4", "peru", "orange2", "mediumorchid2", "lightskyblue1", "lightblue", "hotpink4", "dodgerblue3", "darkgoldenrod1", "bisque3",
+      "burlywood1", "deepskyblue4", "red4", "turquoise2", "steelblue4", "rosybrown3", "paleturquoise1", "mistyrose2", "limegreen", "lightgoldenrod4", "khaki3", "goldenrod4",
+      "darkorchid4", "chocolate", "aquamarine", "cyan1", "orange1", "slateblue4", "violetred4", "seashell3", "peachpuff4", "olivedrab4", "mediumorchid1", "lightskyblue",
+      "lemonchiffon4", "hotpink3", "dodgerblue1", "darkgoldenrod", "bisque2", "burlywood2", "dodgerblue2", "rosybrown2", "turquoise4", "steelblue3", "rosybrown1", "palegreen4",
+      "mistyrose1", "lightyellow4", "lightgoldenrod3", "khaki2", "goldenrod3", "darkorchid3", "chartreuse4", "aquamarine1", "cyan4", "orangered2", "snow", "violetred2",
+      "seashell2", "peachpuff3", "olivedrab3", "mediumblue", "lightseagreen", "lemonchiffon3", "hotpink2", "dodgerblue", "darkblue", "bisque1", "burlywood3", "firebrick1",
+      "royalblue1", "violetred1", "steelblue1", "rosybrown", "palegreen3", "mintcream", "lightyellow3", "lightgoldenrod2", "khaki1", "goldenrod2", "darkorchid2", "chartreuse3",
+      "aquamarine2", "darkcyan", "orchid", "snow2", "violetred", "seashell1", "peachpuff2", "olivedrab2", "mediumaquamarine", "lightsalmon4", "lemonchiffon2", "hotpink1",
+      "deepskyblue3", "cyan3", "bisque", "burlywood4", "forestgreen", "royalblue4", "violetred3", "springgreen3", "red3", "palegreen1", "mediumvioletred", "lightyellow2",
+      "lightgoldenrod1", "khaki", "goldenrod1", "darkorchid1", "chartreuse2", "aquamarine3", "darkgoldenrod2", "orchid1", "snow4", "turquoise3", "seashell", "peachpuff1",
+      "olivedrab1", "maroon4", "lightsalmon3", "lemonchiffon1", "hotpink", "deepskyblue2", "cyan2", "beige", "cadetblue", "gainsboro", "salmon3", "wheat",
+      "springgreen2", "red2", "palegreen", "mediumturquoise", "lightyellow1", "lightgoldenrod", "ivory4", "goldenrod", "darkorchid", "chartreuse1", "aquamarine4", "darkkhaki",
+      "orchid3", "springgreen1", "turquoise1", "seagreen4", "peachpuff", "olivedrab", "maroon3", "lightsalmon2", "lemonchiffon", "honeydew4", "deepskyblue1", "cornsilk4",
+      "azure4", "cadetblue1", "ghostwhite", "sandybrown", "wheat2", "springgreen", "purple4", "palegoldenrod", "mediumspringgreen", "lightsteelblue4", "lightcyan4", "ivory3",
+      "gold3", "darkorange4", "chartreuse", "azure", "darkolivegreen3", "palegreen2", "springgreen4", "tomato3", "seagreen3", "papayawhip", "navyblue", "maroon2",
+      "lightsalmon1", "lawngreen", "honeydew3", "deeppink4", "cornsilk3", "azure3", "cadetblue2", "gold", "seagreen", "wheat4", "snow3", "purple3",
+      "orchid4", "mediumslateblue", "lightsteelblue3", "lightcyan3", "ivory2", "gold2", "darkorange3", "cadetblue4", "azure1", "darkorange1", "paleturquoise2", "steelblue2",
+      "tomato1", "seagreen2", "palevioletred4", "navy", "maroon1", "lightsalmon", "lavenderblush4", "honeydew2", "deeppink3", "cornsilk1", "azure2", "cadetblue3",
+      "gold4", "seagreen1", "yellow1", "snow1", "purple1", "orchid2", "mediumseagreen", "lightsteelblue2", "lightcyan2", "ivory1", "gold1"
+    )
     groupNum <- as.numeric(factor(paste(meta$ANTIBODY, meta$GROUP, sep = "")))
     meta$COLOR <- myColors[groupNum]
-        }
+  }
   invisible(meta)
 }
 
@@ -260,7 +262,7 @@ ReadMeta <- function(metaFile = "sample_meta.txt") {
 ParseReadCounts <- function(data, metaFile = "sample_meta.txt", by = 0.05, prefix = "test", binSize = 1000, ncores = 2) {
   ######################################################
   parParseRaw <- function(x, SEQ) {
-    x <- x[x>0 ] 
+    x <- x[x > 0 ]
     totalCPM <- sum(x)
     res <- NULL
     pct <- NULL
@@ -304,9 +306,9 @@ ParseReadCounts <- function(data, metaFile = "sample_meta.txt", by = 0.05, prefi
   # calculate CPM
   CPM <- parLapply(
     cl, 1:ncol(data),
-    function(x) data[, x] / sum(data[, x]) * 1000000 * ( 1000 / binSize )
+    function(x) data[, x] / sum(data[, x]) * 1000000 * (1000 / binSize)
   )
-  
+
   CPM <- Reduce("cbind", CPM)
   colnames(CPM) <- colnames(data)
   #  print(dim(CPM))
@@ -314,7 +316,7 @@ ParseReadCounts <- function(data, metaFile = "sample_meta.txt", by = 0.05, prefi
 
   # remove extreme values potential from centromere regions
   MAX_CPMW <- 150
-  CPM[rowSums(CPM >MAX_CPMW)>0,]  <- 0
+  CPM[rowSums(CPM > MAX_CPMW) > 0, ] <- 0
   clusterExport(cl, varlist = "CPM", envir = environment())
 
   # calculate data range and times of loop
@@ -326,10 +328,10 @@ ParseReadCounts <- function(data, metaFile = "sample_meta.txt", by = 0.05, prefi
 
   MAX <- Reduce("cbind", MAX)
   MAX <- as.numeric(ceiling(max(MAX)))
-  SEQ <- seq(0, MAX, by = by) 
-  #cat("\n\tMAX = ",MAX,"SEQ = ",length(SEQ),"\n")
-  if (by > MAX || length(SEQ) <100){
-    by <- MAX/100
+  SEQ <- seq(0, MAX, by = by)
+  # cat("\n\tMAX = ",MAX,"SEQ = ",length(SEQ),"\n")
+  if (by > MAX || length(SEQ) < 100) {
+    by <- MAX / 100
     SEQ <- seq(0, MAX, by = by)
   }
 
@@ -430,115 +432,122 @@ CalculateSF <- function(data, metaFile = "sample_meta.txt", prefix = "test", dat
     inds <- grep(ab, meta$ANTIBODY)
     SF <- round(max(slopes[inds]) / slopes[inds], 2)
     meta$SF[inds] <- SF
-  }  
+  }
 
   #--------plot each antibody individually------------------------------
   imgOutput <- paste0(prefix, "_distribution.pdf")
   pdf(imgOutput, width = 14, height = 8)
   slopesByAb <- NULL
-  for (ab in c("All Antibodies",unique(meta$ANTIBODY))) {
-    if(ab=="All Antibodies"){
-        metaByAb <- meta
-    }else{
-        metaByAb <- meta[meta$ANTIBODY == ab,]
+  for (ab in c("All Antibodies", unique(meta$ANTIBODY))) {
+    if (ab == "All Antibodies") {
+      metaByAb <- meta
+    } else {
+      metaByAb <- meta[meta$ANTIBODY == ab, ]
     }
-    if (length(unique(meta$ANTIBODY)) == 1){
-         #avoid redundant and identical plot
-         if(ab == unique(meta$ANTIBODY)){
-             next
-         }else{
-            ab <- unique(meta$ANTIBODY)
-         }
+    if (length(unique(meta$ANTIBODY)) == 1) {
+      # avoid redundant and identical plot
+      if (ab == unique(meta$ANTIBODY)) {
+        next
+      } else {
+        ab <- unique(meta$ANTIBODY)
+      }
     }
-    subsetByAb <- as.data.frame(data[,metaByAb$ID],check.names=F)
+    subsetByAb <- as.data.frame(data[, metaByAb$ID], check.names = F)
     colnames(subsetByAb) <- metaByAb$ID
-    if(ncol(subsetByAb) >1){
-        # delete rows where all values are out of dataRange 9
-        kept <- rowSums(subsetByAb > 0.99 ) != ncol(subsetByAb) 
-        x <- data[kept, 1]
-        subsetByAb <- subsetByAb[kept, ]
-    }else{
-        x <- data[, 1]
+    if (ncol(subsetByAb) > 1) {
+      # delete rows where all values are out of dataRange 9
+      kept <- rowSums(subsetByAb > 0.99) != ncol(subsetByAb)
+      x <- data[kept, 1]
+      subsetByAb <- subsetByAb[kept, ]
+    } else {
+      x <- data[, 1]
     }
     # Set plot layout
-    par(mfrow=c(1,3),oma=c(0,0,5,0))
-    layout.matrix <- matrix(c(1,2,3), nrow = 1, ncol =3)
-    layout(mat = layout.matrix,
-           widths = c(4,3,1)) # Widths of the three columns
-    par(mar=c(10,6,6,3))
+    par(mfrow = c(1, 3), oma = c(0, 0, 5, 0))
+    layout.matrix <- matrix(c(1, 2, 3), nrow = 1, ncol = 3)
+    layout(
+      mat = layout.matrix,
+      widths = c(4, 3, 1)
+    ) # Widths of the three columns
+    par(mar = c(10, 6, 6, 3))
     #-------------plot1: curves--------------------------
     MAX_CPM <- max(x)
-    if(ncol(subsetByAb)==1){
-          totalPages <-  1
-    }else{
-         totalPages <-  1:ncol(subsetByAb)
+    if (ncol(subsetByAb) == 1) {
+      totalPages <- 1
+    } else {
+      totalPages <- 1:ncol(subsetByAb)
     }
     for (r in totalPages) {
-        y <- subsetByAb[, r]
-        used <- data.frame(x = x, y = y)
-        used <- na.omit(used)
-        yMin <- y[sum(y < pctMin)]
-        yMax <- y[sum(y < pctMAX)]
-        xMin <- min(used$x[used$y == yMin])
-        xMax <- max(used$x[used$y == yMax])
-        slopeByAb <- round((yMax - yMin) / (xMax - xMin), 5)
-        slopesByAb <- c(slopesByAb, slopeByAb)
-        if (r == 1) {
-          plot(used,
-            main = "Cumulative Distribution", col = metaByAb$COLOR[r], lwd = 2, xlab = "Cutoff (CPMW)",
-            cex.lab=1.5, cex.axis=1.5, type = "l", ylab = "Proportion of reads", xlim = c(0, MAX_CPM), 
-            ylim = c(0.0, 1.1), cex.main=1.5  )
-        } else {
-          lines(used, col = metaByAb$COLOR[r], lty = 1, lwd = 2, pch = 20, cex = 0.1)
-        }
-        lines(x = c(xMin, xMax), y = c(yMin, yMax), col = "blue", lty = 3)
+      y <- subsetByAb[, r]
+      used <- data.frame(x = x, y = y)
+      used <- na.omit(used)
+      yMin <- y[sum(y < pctMin)]
+      yMax <- y[sum(y < pctMAX)]
+      xMin <- min(used$x[used$y == yMin])
+      xMax <- max(used$x[used$y == yMax])
+      slopeByAb <- round((yMax - yMin) / (xMax - xMin), 5)
+      slopesByAb <- c(slopesByAb, slopeByAb)
+      if (r == 1) {
+        plot(used,
+          main = "Cumulative Distribution", col = metaByAb$COLOR[r], lwd = 2, xlab = "Cutoff (CPMW)",
+          cex.lab = 1.5, cex.axis = 1.5, type = "l", ylab = "Proportion of reads", xlim = c(0, MAX_CPM),
+          ylim = c(0.0, 1.1), cex.main = 1.5
+        )
+      } else {
+        lines(used, col = metaByAb$COLOR[r], lty = 1, lwd = 2, pch = 20, cex = 0.1)
+      }
+      lines(x = c(xMin, xMax), y = c(yMin, yMax), col = "blue", lty = 3)
     }
     legFontSize <- ifelse(ncol(subsetByAb) < 10, 1.5, 1 + 5 / ncol(subsetByAb))
-    legend("bottomright", legend = paste(gsub(".bam","",metaByAb$ID), paste(", SF=", metaByAb$SF, sep = ""), sep = ""), col = metaByAb$COLOR, pch = 15, bty = "n", ncol = 1, cex = legFontSize)
+    legend("bottomright", legend = paste(gsub(".bam", "", metaByAb$ID), paste(", SF=", metaByAb$SF, sep = ""), sep = ""), col = metaByAb$COLOR, pch = 15, bty = "n", ncol = 1, cex = legFontSize)
 
     #-----------plot2: barplot----------------------------
     cutoffLow <- 3
     cutoffHigh <- 12
-    Low <- which.min(abs( x - cutoffLow))
+    Low <- which.min(abs(x - cutoffLow))
     High <- which.min(abs(x - cutoffHigh))
-    barplotDF <- rbind(subsetByAb[Low,], subsetByAb[High,] -subsetByAb[Low,])
-    barplotDF <- rbind(barplotDF, 1-subsetByAb[High,])
-    barplotDF <- as.data.frame(barplotDF,check.names=F)
-    colnames(barplotDF) <-  metaByAb$ID
-    rownames(barplotDF) <- c(paste0("< ",cutoffLow),
-                            paste0(cutoffLow,"~",cutoffHigh),
-                            paste0("> ",cutoffHigh))
-    
-    myCols <- c("grey","pink","red")
+    barplotDF <- rbind(subsetByAb[Low, ], subsetByAb[High, ] - subsetByAb[Low, ])
+    barplotDF <- rbind(barplotDF, 1 - subsetByAb[High, ])
+    barplotDF <- as.data.frame(barplotDF, check.names = F)
+    colnames(barplotDF) <- metaByAb$ID
+    rownames(barplotDF) <- c(
+      paste0("< ", cutoffLow),
+      paste0(cutoffLow, "~", cutoffHigh),
+      paste0("> ", cutoffHigh)
+    )
+
+    myCols <- c("grey", "pink", "red")
     xLabels <- colnames(barplotDF)
     legLbls <- rownames(barplotDF)
-    par(mar=c(16,6,6,0)) # c(bottom, left, top, right)
+    par(mar = c(16, 6, 6, 0)) # c(bottom, left, top, right)
     barNum <- ncol(subsetByAb)
-    xlimMax <-1
-    barWidth <- ifelse(barNum < 10, xlimMax / barNum*0.6, xlimMax / barNum*0.8)
-    barSpace <- ifelse(barNum < 10, xlimMax / barNum*0.4, xlimMax / barNum*0.2)
-    bp<-barplot(as.matrix(barplotDF),col= myCols,beside=F, main="Group by CPMW Range", ylab="Proportion Of Reads",
-                axes = FALSE, axisnames = FALSE,cex.main=1.5, cex.lab=1.5,cex.axis=1.5,cex.names=1.5,
-                xlim=c(0,xlimMax), width=barWidth, space = barSpace)  
-    axis(2,cex = 2)
-    axis(1,at=bp, labels=FALSE,tck=-0.02)
-    xLabels <- gsub(".bam","",xLabels)
-    if(sum(nchar(xLabels) >20)>0 || barNum >10 ){
-        fontSize <- 1
-    }else{
-        fontSize <- 1.5
+    xlimMax <- 1
+    barWidth <- ifelse(barNum < 10, xlimMax / barNum * 0.6, xlimMax / barNum * 0.8)
+    barSpace <- ifelse(barNum < 10, xlimMax / barNum * 0.4, xlimMax / barNum * 0.2)
+    bp <- barplot(as.matrix(barplotDF),
+      col = myCols, beside = F, main = "Group by CPMW Range", ylab = "Proportion Of Reads",
+      axes = FALSE, axisnames = FALSE, cex.main = 1.5, cex.lab = 1.5, cex.axis = 1.5, cex.names = 1.5,
+      xlim = c(0, xlimMax), width = barWidth, space = barSpace
+    )
+    axis(2, cex = 2)
+    axis(1, at = bp, labels = FALSE, tck = -0.02)
+    xLabels <- gsub(".bam", "", xLabels)
+    if (sum(nchar(xLabels) > 20) > 0 || barNum > 10) {
+      fontSize <- 1
+    } else {
+      fontSize <- 1.5
     }
 
-    xLabels <- strtrim(xLabels,20)
-    text(x=bp, y=par("usr")[3]-0.02, labels = xLabels, srt = 60, adj = 1, xpd = TRUE,cex = fontSize)
+    xLabels <- strtrim(xLabels, 20)
+    text(x = bp, y = par("usr")[3] - 0.02, labels = xLabels, col = metaByAb$COLOR, srt = 60, adj = 1, xpd = TRUE, cex = fontSize)
 
     #---------plot3: legend---------------------------------
     # c(bottom, left, top, right)
-    par(mar=c(6, 3, 6, 1), xpd=T)
+    par(mar = c(6, 3, 6, 1), xpd = T)
     plot.new()
-    legend("top",fill = rev(myCols), legend = rev(legLbls),ncol=1,cex = 2,bty="n",title="CPMW")
-    mtext(ab, outer = TRUE, cex = 1.5, line=2)
-    mtext(imgOutput, outer = TRUE, cex = 1, line=0)
+    legend("top", fill = rev(myCols), legend = rev(legLbls), ncol = 1, cex = 2, bty = "n", title = "CPMW")
+    mtext(ab, outer = TRUE, cex = 1.5, line = 2)
+    mtext(imgOutput, outer = TRUE, cex = 1, line = 0)
   }
   garbage <- dev.off()
   cat("\n\t", imgOutput, "[saved]")
