@@ -34,7 +34,7 @@ GenerateBins <- function(chromFile, binSize = 1000, overlap = 0, withChr = TRUE)
     }
   }
     if (binSize < 200 && binSize > 10000 ){
-     stop(paste0("\n**Recommended binSize range 200 ~ 10000 (bp); Your binsize is", binSize," **\n"))
+     stop(paste0("\n**Recommended binSize range 200 ~ 10000 (bp); Your binSize is", binSize," **\n"))
   }
   cat(paste0("\n\tFollowing file will be used to generate sliding windows: ", basename(chromFile)))
   chromSize <- read.table(chromFile, sep = "\t", header = F, fill = TRUE, quote = "")
@@ -405,14 +405,13 @@ CalculateSF <- function(data, metaFile = "sample_meta.txt", prefix = "test", dat
   }
   meta <- meta[kept, ] # only use samples listed in meta
   data <- data[, c(colnames(data)[1], kept)] # reorder or subset
-  imgOutput <- paste0(prefix, "_distribution.pdf")
-  pdf(imgOutput, width = 6, height = 6)
+
   slopes <- NULL
   MAX_CPM <- max(data[, 1])
   if (!is.na(xMAX)) {
     MAX_CPM <- ifelse(xMAX < MAX_CPM, xMAX, MAX_CPM)
   }
-  #---------plot all samples-------------------------------------
+  #---------calculate SF-------------------------------------
   x <- data[, 1]
   for (r in 2:ncol(data)) {
     y <- data[, r]
@@ -424,15 +423,6 @@ CalculateSF <- function(data, metaFile = "sample_meta.txt", prefix = "test", dat
     xMax <- max(used$x[used$y == yMax])
     slope <- round((yMax - yMin) / (xMax - xMin), 5)
     slopes <- c(slopes, slope)
-    if (r == 2) {
-      plot(used,
-        main = paste("all samples","\n",imgOutput), col = meta$COLOR[r - 1], lwd = 2, xlab = "cutoff (CPMW)",
-        cex = 0.8, cex.main = 0.8, type = "l", ylab = "Proportion of reads", xlim = c(0, MAX_CPM), ylim = c(0.0, 1.1)
-      )
-    } else {
-      lines(used, col = meta$COLOR[r - 1], lty = 1, lwd = 2, pch = 20, cex = 0.1)
-    }
-    lines(x = c(xMin, xMax), y = c(yMin, yMax), col = "blue", lty = 3)
   }
   meta$SLOPE <- slopes
   meta$SF <- NA
@@ -441,49 +431,118 @@ CalculateSF <- function(data, metaFile = "sample_meta.txt", prefix = "test", dat
     SF <- round(max(slopes[inds]) / slopes[inds], 2)
     meta$SF[inds] <- SF
   }  
-  legFontSize <- ifelse(ncol(data) < 10, 0.8, 0.3 + 5 / ncol(data))
-  legend("bottomright", legend = paste(meta$ID, paste(",sf=", meta$SF, sep = ""), sep = ""), col = meta$COLOR, pch = 15, bty = "n", ncol = 1, cex = legFontSize)
 
-   #--------plot each antibody individually------------------------------
-  if (length(unique(meta$ANTIBODY))>1 ){
-      slopesByAb <- NULL
-      for (ab in unique(meta$ANTIBODY)) {
+  #--------plot each antibody individually------------------------------
+  imgOutput <- paste0(prefix, "_distribution.pdf")
+  pdf(imgOutput, width = 14, height = 8)
+  slopesByAb <- NULL
+  for (ab in c("All Antibodies",unique(meta$ANTIBODY))) {
+    if(ab=="All Antibodies"){
+        metaByAb <- meta
+    }else{
         metaByAb <- meta[meta$ANTIBODY == ab,]
-        subsetByAb <- data[,metaByAb$ID]
+    }
+    if (length(unique(meta$ANTIBODY)) == 1){
+         #avoid redundant and identical plot
+         if(ab == unique(meta$ANTIBODY)){
+             next
+         }else{
+            ab <- unique(meta$ANTIBODY)
+         }
+    }
+    subsetByAb <- as.data.frame(data[,metaByAb$ID],check.names=F)
+    colnames(subsetByAb) <- metaByAb$ID
+    if(ncol(subsetByAb) >1){
         # delete rows where all values are out of dataRange 9
         kept <- rowSums(subsetByAb > 0.99 ) != ncol(subsetByAb) 
         x <- data[kept, 1]
         subsetByAb <- subsetByAb[kept, ]
-        MAX_CPM <- max(x)
-        for (r in 1:ncol(subsetByAb)) {
-            y <- subsetByAb[, r]
-            used <- data.frame(x = x, y = y)
-            used <- na.omit(used)
-            yMin <- y[sum(y < pctMin)]
-            yMax <- y[sum(y < pctMAX)]
-            xMin <- min(used$x[used$y == yMin])
-            xMax <- max(used$x[used$y == yMax])
-            slopeByAb <- round((yMax - yMin) / (xMax - xMin), 5)
-            slopesByAb <- c(slopesByAb, slopeByAb)
-            if (r == 1) {
-              plot(used,
-                main = paste(ab,"\n",imgOutput), col = metaByAb$COLOR[r], lwd = 2, xlab = "cutoff (CPMW)",
-                cex = 0.8, cex.main = 0.8, type = "l", ylab = "Proportion of reads", xlim = c(0, MAX_CPM), ylim = c(0.0, 1.1)
-              )
-            } else {
-              lines(used, col = metaByAb$COLOR[r], lty = 1, lwd = 2, pch = 20, cex = 0.1)
-            }
-            lines(x = c(xMin, xMax), y = c(yMin, yMax), col = "blue", lty = 3)
-        }
-        legFontSize <- ifelse(ncol(subsetByAb) < 10, 0.8, 0.3 + 5 / ncol(subsetByAb))
-        legend("bottomright", legend = paste(metaByAb$ID, paste(",sf=", metaByAb$SF, sep = ""), sep = ""), col = metaByAb$COLOR, pch = 15, bty = "n", ncol = 1, cex = legFontSize)
-      }
+    }else{
+        x <- data[, 1]
     }
-    garbage <- dev.off()
-    cat("\n\t", imgOutput, "[saved]")
+    # Set plot layout
+    par(mfrow=c(1,3),oma=c(0,0,5,0))
+    layout.matrix <- matrix(c(1,2,3), nrow = 1, ncol =3)
+    layout(mat = layout.matrix,
+           widths = c(4,3,1)) # Widths of the three columns
+    par(mar=c(10,6,6,3))
+    #-------------plot1: curves--------------------------
+    MAX_CPM <- max(x)
+    if(ncol(subsetByAb)==1){
+          totalPages <-  1
+    }else{
+         totalPages <-  1:ncol(subsetByAb)
+    }
+    for (r in totalPages) {
+        y <- subsetByAb[, r]
+        used <- data.frame(x = x, y = y)
+        used <- na.omit(used)
+        yMin <- y[sum(y < pctMin)]
+        yMax <- y[sum(y < pctMAX)]
+        xMin <- min(used$x[used$y == yMin])
+        xMax <- max(used$x[used$y == yMax])
+        slopeByAb <- round((yMax - yMin) / (xMax - xMin), 5)
+        slopesByAb <- c(slopesByAb, slopeByAb)
+        if (r == 1) {
+          plot(used,
+            main = "Cumulative Distribution", col = metaByAb$COLOR[r], lwd = 2, xlab = "Cutoff (CPMW)",
+            cex.lab=1.5, cex.axis=1.5, type = "l", ylab = "Proportion of reads", xlim = c(0, MAX_CPM), 
+            ylim = c(0.0, 1.1), cex.main=1.5  )
+        } else {
+          lines(used, col = metaByAb$COLOR[r], lty = 1, lwd = 2, pch = 20, cex = 0.1)
+        }
+        lines(x = c(xMin, xMax), y = c(yMin, yMax), col = "blue", lty = 3)
+    }
+    legFontSize <- ifelse(ncol(subsetByAb) < 10, 1.5, 1 + 5 / ncol(subsetByAb))
+    legend("bottomright", legend = paste(gsub(".bam","",metaByAb$ID), paste(", SF=", metaByAb$SF, sep = ""), sep = ""), col = metaByAb$COLOR, pch = 15, bty = "n", ncol = 1, cex = legFontSize)
 
+    #-----------plot2: barplot----------------------------
+    cutoffLow <- 3
+    cutoffHigh <- 12
+    Low <- which.min(abs( x - cutoffLow))
+    High <- which.min(abs(x - cutoffHigh))
+    barplotDF <- rbind(subsetByAb[Low,], subsetByAb[High,] -subsetByAb[Low,])
+    barplotDF <- rbind(barplotDF, 1-subsetByAb[High,])
+    barplotDF <- as.data.frame(barplotDF,check.names=F)
+    colnames(barplotDF) <-  metaByAb$ID
+    rownames(barplotDF) <- c(paste0("< ",cutoffLow),
+                            paste0(cutoffLow,"~",cutoffHigh),
+                            paste0("> ",cutoffHigh))
+    
+    myCols <- c("grey","pink","red")
+    xLabels <- colnames(barplotDF)
+    legLbls <- rownames(barplotDF)
+    par(mar=c(16,6,6,0)) # c(bottom, left, top, right)
+    barNum <- ncol(subsetByAb)
+    xlimMax <-1
+    barWidth <- ifelse(barNum < 10, xlimMax / barNum*0.6, xlimMax / barNum*0.8)
+    barSpace <- ifelse(barNum < 10, xlimMax / barNum*0.4, xlimMax / barNum*0.2)
+    bp<-barplot(as.matrix(barplotDF),col= myCols,beside=F, main="Group by CPMW Range", ylab="Proportion Of Reads",
+                axes = FALSE, axisnames = FALSE,cex.main=1.5, cex.lab=1.5,cex.axis=1.5,cex.names=1.5,
+                xlim=c(0,xlimMax), width=barWidth, space = barSpace)  
+    axis(2,cex = 2)
+    axis(1,at=bp, labels=FALSE,tck=-0.02)
+    xLabels <- gsub(".bam","",xLabels)
+    if(sum(nchar(xLabels) >20)>0 || barNum >10 ){
+        fontSize <- 1
+    }else{
+        fontSize <- 1.5
+    }
 
+    xLabels <- strtrim(xLabels,20)
+    text(x=bp, y=par("usr")[3]-0.02, labels = xLabels, srt = 60, adj = 1, xpd = TRUE,cex = fontSize)
 
+    #---------plot3: legend---------------------------------
+    # c(bottom, left, top, right)
+    par(mar=c(6, 3, 6, 1), xpd=T)
+    plot.new()
+    legend("top",fill = rev(myCols), legend = rev(legLbls),ncol=1,cex = 2,bty="n",title="CPMW")
+    mtext(ab, outer = TRUE, cex = 1.5, line=2)
+    mtext(imgOutput, outer = TRUE, cex = 1, line=0)
+  }
+  garbage <- dev.off()
+  cat("\n\t", imgOutput, "[saved]")
+  #-----------------------------------------------------
   output <- paste0(prefix, "_SF.txt")
   outDF <- meta[, !colnames(meta) %in% "SLOPE"]
   write.table(outDF, output, sep = "\t", quote = F, row.names = F, col.names = T)
@@ -502,6 +561,8 @@ CalculateSF <- function(data, metaFile = "sample_meta.txt", prefix = "test", dat
 
   invisible(return(meta))
 }
+
+
 ######################################################
 
 #' This function generates boxplot using sacaling factor table. It's been included in the last step of ChIPseqSpikeInFree().
