@@ -496,7 +496,7 @@ CalculateSF <- function(data, metaFile = "sample_meta.txt", prefix = "test", dat
       } else {
         lines(used, col = metaByAb$COLOR[r], lty = 1, lwd = 2, pch = 20, cex = 0.1)
       }
-      lines(x = c(xMin, xMax), y = c(yMin, yMax), col = "blue", lty = 3)
+      lines(x = c(xMin, xMax), y = c(yMin, yMax), col = metaByAb$COLOR[r] , lty = 3)
     }
     legFontSize <- ifelse(ncol(subsetByAb) < 10, 1.5, 1 + 5 / ncol(subsetByAb))
     legend("bottomright", legend = paste(gsub(".bam", "", metaByAb$ID), paste(", SF=", metaByAb$SF, sep = ""), sep = ""), col = metaByAb$COLOR, pch = 15, bty = "n", ncol = 1, cex = legFontSize)
@@ -539,7 +539,8 @@ CalculateSF <- function(data, metaFile = "sample_meta.txt", prefix = "test", dat
     }
 
     xLabels <- strtrim(xLabels, 20)
-    text(x = bp, y = par("usr")[3] - 0.02, labels = xLabels, col = metaByAb$COLOR, srt = 60, adj = 1, xpd = TRUE, cex = fontSize)
+    text(x = bp, y = par("usr")[3] - (par("usr")[4] - par("usr")[3])/30, labels = xLabels,
+        col = metaByAb$COLOR, srt = 60, adj = 1, xpd = TRUE, cex = fontSize)
 
     #---------plot3: legend---------------------------------
     # c(bottom, left, top, right)
@@ -587,6 +588,7 @@ CalculateSF <- function(data, metaFile = "sample_meta.txt", prefix = "test", dat
 #' ## (for example, test_SF.txt) will be generated.
 #' 
 #' # BoxplotSF(input="test_SF.txt",prefix="test")
+
 BoxplotSF <- function(input, prefix = "test") {
   # This function generates boxplot using sacaling factor table
   if (class(input) == "character") {
@@ -607,25 +609,34 @@ BoxplotSF <- function(input, prefix = "test") {
     myCols <- input[!duplicated(input$GROUP2), "COLOR"]
   }
   output <- paste0(prefix, "_boxplot.pdf")
-  pdf(output, width = 7, height = 6)
-  par(mfrow = c(1, 1), oma = c(0, 0, 0, 0), mar = c(10, 4, 2, 12))
+  pdf(output, width = 8, height = 7)
+  par(mfrow=c(1,2),oma=c(0,0,3,0), mar=c(3,4,4,2)+0.1)
+  layout.matrix <- matrix(c(1,2), nrow = 1, ncol =2)
+  layout(layout.matrix, widths=c(8,4))  # put legend on right 3/8th of the chart
+  par(mar = c(12, 6, 2, 2))
   myTitle <- "ScalingFactor~GROUP+ANTIBODY"
   nameOrder <- ordered(input$GROUP2, levels = groupLabels)
   bp <- boxplot(SF ~ nameOrder,
-    data = input, main = myTitle,
-    las = 2, ylab = "Scaling Factors", xlab = "", cex.axis = 0.8, outline = T, col = myCols,
-    cex.lab = 0.7, cex.main = 0.8
+    data = input, main = "", ylim=c(0,max(input$SF)),
+    las = 2, ylab = "Scaling Factors", xlab = "", xaxt = "n", cex.axis = 0.8,  col = myCols, 
+    cex.lab = 1.2, cex.main = 0.8, outline = T,pars=list(outcol="white")
   )
-  stripchart(SF ~ nameOrder,
-    data = input[!input$SF %in% bp$out, ], vertical = T,
+  axis(1,at=seq_along(groupLabels), labels=FALSE,tck=-0.02)
+  text(x =  seq_along(groupLabels), y =par("usr")[3] - (par("usr")[4] - par("usr")[3])/30,srt = 45, adj = 1,
+     labels = groupLabels,col=myCols, xpd = TRUE)
+  stripchart(SF ~ nameOrder, data = input, vertical = T,
     method = "jitter", add = TRUE, jitter = 0.2, cex = 0.7, pch = 1, col = "#595959"
   )
-  par(xpd = T)
-  legend(x = length(groupLabels) + 1, y = max(input$SF), legend = groupLabels, col = myCols, pch = 15, bty = "n", ncol = 1, cex = )
+  par(mar=c(6, 0, 2, 1), xpd=T)
+  # c(bottom, left, top, right)
+  plot.new()
+  legend("top", legend = groupLabels, col = myCols, pch = 15, bty = "n", ncol = 1, cex =1 )
+  mtext(myTitle, outer = TRUE, cex =1, line=0)
   garbage <- dev.off()
   cat("\n\t", output, "[saved]")
   invisible(output)
 }
+
 
 ######################################################
 

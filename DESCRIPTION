@@ -1,7 +1,7 @@
 Package: ChIPseqSpikeInFree
 Title: A Spike-in Free ChIP-Seq Normalization Approach for Detecting Global Changes in Histone Modifications
-Version: 1.0.8
-Date: 2019-02-18
+Version: 1.1.0
+Date: 2019-03-08
 Authors@R: 
     person(given = "Hongjian",
            family = "Jin",
