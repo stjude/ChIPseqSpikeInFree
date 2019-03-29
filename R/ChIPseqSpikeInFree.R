@@ -99,37 +99,69 @@ CountRawReads <- function(bamFiles, chromFile = "hg19", prefix = "test", singleE
   if (binSize < 200 && binSize > 10000) {
     stop(paste0("\n**Recommended binSize range 200 ~ 10000 (bp); Your binsize is", binSize, " **\n"))
   }
-  # check chromosome notation in bam file
-  bamHeader <- scanBamHeader(bamFiles[1])
-  chrFlag <- grepl("SN:chr", bamHeader[[1]]$text[2])
-  binDF <- GenerateBins(chromFile = chromFile, binSize = binSize, overlap = 0, withChr = chrFlag)
-  bins <- binDF
-  myCoords <- GRanges(
-    seqnames = bins[, 1],
-    ranges = IRanges(start = bins[, 2], end = bins[, 3], names = paste0(bins[, 1], ":", bins[, 2], "-", bins[, 3])),
-    strand = "+"
-  )
+  # Function to check chromosome notation in bam file
+  # return a logical vector
+  ChrCheck <- function(bamFiles) {
+    bamHeader <- scanBamHeader(bamFiles)
+    nameList <- unlist(
+      lapply(
+        1:length(bamHeader),
+        function(x) {
+          names(bamHeader[[x]]$targets[1])
+        }
+      )
+    )
+    grepl("chr", nameList)
+  }
+
+  # Function to count reads
+  # return a data frame
+  CountingReads <- function(bamFiles, withChr) {
+    binDF <- GenerateBins(chromFile = chromFile, binSize = binSize, overlap = 0, withChr = withChr)
+    bins <- binDF
+    myCoords <- GRanges(
+      seqnames = bins[, 1],
+      ranges = IRanges(start = bins[, 2], end = bins[, 3], names = paste0(bins[, 1], ":", bins[, 2], "-", bins[, 3])),
+      strand = "+"
+    )
+    bamlist <- BamFileList(bamFiles, yieldSize = 5e4)
+    names(bamlist) <- basename(bamFiles)
+    assay <- NULL ## To please R CMD check
+    counts <- summarizeOverlaps(
+      features = myCoords,
+      reads = bamlist,
+      ignore.strand = TRUE,
+      singleEnd = singleEnd
+    )
+    dat <- as.data.frame(assay(counts))
+    return(dat)
+  }
+
+  chrFlags <- ChrCheck(bamFiles)
+  bams.Chr <- bamFiles[chrFlags]
+  bams.NoChr <- bamFiles[!chrFlags]
 
   cat("\n\tThis step could take some time. Please be patient...")
-  bamlist <- BamFileList(bamFiles, yieldSize = 5e4)
-  names(bamlist) <- basename(bamFiles)
-  assay <- NULL ## To please R CMD check
-  counts <- summarizeOverlaps(
-    features = myCoords,
-    reads = bamlist,
-    ignore.strand = TRUE,
-    singleEnd = singleEnd
-  )
-  dat <- as.data.frame(assay(counts))
-  failedBams <- sum(colSums(dat) == 0)
-  if (failedBams > 0) {
-    cat("\n\tWarning:  read counts are all zeros in ", failedBams, " column(s). \n")
+  dat.Chr <- NULL
+  dat.NoChr <- NULL
+  if (length(bams.Chr) > 0) {
+    dat.Chr <- CountingReads(bams.Chr, TRUE)
   }
-  datOut <- data.frame(bin = rownames(dat), dat, check.names = F)
+  if (length(bams.NoChr) > 0) {
+    dat.NoChr <- CountingReads(bams.NoChr, FALSE)
+  }
+  if (!is.null(dat.Chr) && !is.null(dat.NoChr)) {
+    datOut <- data.frame(bin = rownames(dat.Chr), dat.Chr, dat.NoChr, check.names = F)
+  } else if (!is.null(dat.Chr)) {
+    datOut <- data.frame(bin = rownames(dat.Chr), dat.Chr, check.names = F)
+  } else {
+    datOut <- data.frame(bin = rownames(dat.NoChr), dat.NoChr, check.names = F)
+  }
+  rm(list = c("dat.Chr", "dat.NoChr"))
   options(scipen = 99) # disable scientific notation when writing out
   outFile <- paste0(prefix, "_rawCounts.txt")
   write.table(datOut, outFile, sep = "\t", quote = F, row.names = F, col.names = T)
-  invisible(return(dat))
+  invisible(return(datOut[, -1]))
 }
 
 
@@ -300,58 +332,65 @@ ParseReadCounts <- function(data, metaFile = "sample_meta.txt", by = 0.05, prefi
   if (ncores > 1) {
     cat(paste0("\n\tEnabling parallel computing ( ", ncores, " cores)...\n"))
   }
-  # Initiate cluster
-  cl <- makeCluster(ncores)
-  clusterExport(cl, varlist = c("data"), envir = environment())
-  # calculate CPM
-  CPM <- parLapply(
-    cl, 1:ncol(data),
-    function(x) data[, x] / sum(data[, x]) * 1000000 * (1000 / binSize)
-  )
+  tryCatch({
+    # Initiate cluster
+    cl <- makeCluster(ncores)
+    clusterExport(cl, varlist = c("data"), envir = environment())
+    # calculate CPM
+    CPM <- parLapply(
+      cl, 1:ncol(data),
+      function(x) data[, x] / sum(data[, x]) * 1000000 * (1000 / binSize)
+    )
 
-  CPM <- Reduce("cbind", CPM)
-  colnames(CPM) <- colnames(data)
-  #  print(dim(CPM))
-  #  cat("\n\tCPM was calculateded.\n")
+    CPM <- Reduce("cbind", CPM)
+    colnames(CPM) <- colnames(data)
+    #  print(dim(CPM))
+    #  cat("\n\tCPM was calculateded.\n")
 
-  # remove extreme values potential from centromere regions
-  MAX_CPMW <- 150
-  CPM[rowSums(CPM > MAX_CPMW) > 0, ] <- 0
-  clusterExport(cl, varlist = "CPM", envir = environment())
+    # remove extreme values potential from centromere regions
+    MAX_CPMW <- 150
+    CPM[rowSums(CPM > MAX_CPMW) > 0, ] <- 0
+    clusterExport(cl, varlist = "CPM", envir = environment())
 
-  # calculate data range and times of loop
-  MAX <- 0
-  MAX <- parLapply(
-    cl, 1:ncol(CPM),
-    function(x) max(CPM[, x])
-  )
+    # calculate data range and times of loop
+    MAX <- 0
+    MAX <- parLapply(
+      cl, 1:ncol(CPM),
+      function(x) max(CPM[, x])
+    )
 
-  MAX <- Reduce("cbind", MAX)
-  MAX <- as.numeric(ceiling(max(MAX)))
-  SEQ <- seq(0, MAX, by = by)
-  # cat("\n\tMAX = ",MAX,"SEQ = ",length(SEQ),"\n")
-  if (by > MAX || length(SEQ) < 100) {
-    by <- MAX / 100
+    MAX <- Reduce("cbind", MAX)
+    MAX <- as.numeric(ceiling(max(MAX)))
+    if (!is.finite(MAX)) {
+      MAX <- MAX_CPMW
+    }
     SEQ <- seq(0, MAX, by = by)
-  }
+    # cat("\n\tMAX = ",MAX,"SEQ = ",length(SEQ),"\n")
+    if (by > MAX || length(SEQ) < 100) {
+      by <- MAX / 100
+      SEQ <- seq(0, MAX, by = by)
+    }
 
-  clusterExport(cl, varlist = c("SEQ", "CPM", "parParseRaw"), envir = environment())
-  options(scipen = 999)
-  res <- parLapply(
-    cl, 1:ncol(CPM),
-    function(x) parParseRaw(CPM[, x], SEQ)
+    clusterExport(cl, varlist = c("SEQ", "CPM", "parParseRaw"), envir = environment())
+    options(scipen = 999)
+    res <- parLapply(
+      cl, 1:ncol(CPM),
+      function(x) parParseRaw(CPM[, x], SEQ)
+    )
+    stopCluster(cl)
+    res <- Reduce("cbind", res)
+    # cat("\nCPM was parsed.\n")
+    colnames(res) <- colnames(CPM)
+
+    dat <- data.frame(cutoff = SEQ, res, check.names = F)
+    kept <- rowSums(res) != ncol(res) # delete rows with all 1
+    dat <- dat[kept, ]
+    output <- paste0(prefix, "_parsedMatrix.txt")
+    write.table(dat, output, sep = "\t", quote = F, row.names = F, col.names = T)
+    cat("\n\t", output, "[saved]")
+  },
+  error = function(e) print(e)
   )
-  stopCluster(cl)
-  res <- Reduce("cbind", res)
-  # cat("\nCPM was parsed.\n")
-  colnames(res) <- colnames(CPM)
-
-  dat <- data.frame(cutoff = SEQ, res, check.names = F)
-  kept <- rowSums(res) != ncol(res) # delete rows with all 1
-  dat <- dat[kept, ]
-  output <- paste0(prefix, "_parsedMatrix.txt")
-  write.table(dat, output, sep = "\t", quote = F, row.names = F, col.names = T)
-  cat("\n\t", output, "[saved]")
   return(dat)
 }
 
@@ -429,7 +468,7 @@ CalculateSF <- function(data, metaFile = "sample_meta.txt", prefix = "test", dat
   meta$SLOPE <- slopes
   meta$SF <- NA
   for (ab in unique(meta$ANTIBODY)) {
-    inds <- grep(ab, meta$ANTIBODY)
+    inds <- grep(paste0("^", ab, "$"), meta$ANTIBODY) # grep may cause problem sometime
     SF <- round(max(slopes[inds]) / slopes[inds], 2)
     meta$SF[inds] <- SF
   }
@@ -496,7 +535,7 @@ CalculateSF <- function(data, metaFile = "sample_meta.txt", prefix = "test", dat
       } else {
         lines(used, col = metaByAb$COLOR[r], lty = 1, lwd = 2, pch = 20, cex = 0.1)
       }
-      lines(x = c(xMin, xMax), y = c(yMin, yMax), col = metaByAb$COLOR[r] , lty = 3)
+      lines(x = c(xMin, xMax), y = c(yMin, yMax), col = metaByAb$COLOR[r], lty = 3)
     }
     legFontSize <- ifelse(ncol(subsetByAb) < 10, 1.5, 1 + 5 / ncol(subsetByAb))
     legend("bottomright", legend = paste(gsub(".bam", "", metaByAb$ID), paste(", SF=", metaByAb$SF, sep = ""), sep = ""), col = metaByAb$COLOR, pch = 15, bty = "n", ncol = 1, cex = legFontSize)
@@ -539,8 +578,10 @@ CalculateSF <- function(data, metaFile = "sample_meta.txt", prefix = "test", dat
     }
 
     xLabels <- strtrim(xLabels, 20)
-    text(x = bp, y = par("usr")[3] - (par("usr")[4] - par("usr")[3])/30, labels = xLabels,
-        col = metaByAb$COLOR, srt = 60, adj = 1, xpd = TRUE, cex = fontSize)
+    text(
+      x = bp, y = par("usr")[3] - (par("usr")[4] - par("usr")[3]) / 30, labels = xLabels,
+      col = metaByAb$COLOR, srt = 60, adj = 1, xpd = TRUE, cex = fontSize
+    )
 
     #---------plot3: legend---------------------------------
     # c(bottom, left, top, right)
@@ -588,7 +629,6 @@ CalculateSF <- function(data, metaFile = "sample_meta.txt", prefix = "test", dat
 #' ## (for example, test_SF.txt) will be generated.
 #' 
 #' # BoxplotSF(input="test_SF.txt",prefix="test")
-
 BoxplotSF <- function(input, prefix = "test") {
   # This function generates boxplot using sacaling factor table
   if (class(input) == "character") {
@@ -610,28 +650,31 @@ BoxplotSF <- function(input, prefix = "test") {
   }
   output <- paste0(prefix, "_boxplot.pdf")
   pdf(output, width = 8, height = 7)
-  par(mfrow=c(1,2),oma=c(0,0,3,0), mar=c(3,4,4,2)+0.1)
-  layout.matrix <- matrix(c(1,2), nrow = 1, ncol =2)
-  layout(layout.matrix, widths=c(8,4))  # put legend on right 3/8th of the chart
+  par(mfrow = c(1, 2), oma = c(0, 0, 3, 0), mar = c(3, 4, 4, 2) + 0.1)
+  layout.matrix <- matrix(c(1, 2), nrow = 1, ncol = 2)
+  layout(layout.matrix, widths = c(8, 4)) # put legend on right 3/8th of the chart
   par(mar = c(12, 6, 2, 2))
   myTitle <- "ScalingFactor~GROUP+ANTIBODY"
   nameOrder <- ordered(input$GROUP2, levels = groupLabels)
   bp <- boxplot(SF ~ nameOrder,
-    data = input, main = "", ylim=c(0,max(input$SF)),
-    las = 2, ylab = "Scaling Factors", xlab = "", xaxt = "n", cex.axis = 0.8,  col = myCols, 
-    cex.lab = 1.2, cex.main = 0.8, outline = T,pars=list(outcol="white")
+    data = input, main = "", ylim = c(0, max(input$SF)),
+    las = 2, ylab = "Scaling Factors", xlab = "", xaxt = "n", cex.axis = 0.8, col = myCols,
+    cex.lab = 1.2, cex.main = 0.8, outline = T, pars = list(outcol = "white")
   )
-  axis(1,at=seq_along(groupLabels), labels=FALSE,tck=-0.02)
-  text(x =  seq_along(groupLabels), y =par("usr")[3] - (par("usr")[4] - par("usr")[3])/30,srt = 45, adj = 1,
-     labels = groupLabels,col=myCols, xpd = TRUE)
-  stripchart(SF ~ nameOrder, data = input, vertical = T,
+  axis(1, at = seq_along(groupLabels), labels = FALSE, tck = -0.02)
+  text(
+    x = seq_along(groupLabels), y = par("usr")[3] - (par("usr")[4] - par("usr")[3]) / 30, srt = 45, adj = 1,
+    labels = groupLabels, col = myCols, xpd = TRUE
+  )
+  stripchart(SF ~ nameOrder,
+    data = input, vertical = T,
     method = "jitter", add = TRUE, jitter = 0.2, cex = 0.7, pch = 1, col = "#595959"
   )
-  par(mar=c(6, 0, 2, 1), xpd=T)
+  par(mar = c(6, 0, 2, 1), xpd = T)
   # c(bottom, left, top, right)
   plot.new()
-  legend("top", legend = groupLabels, col = myCols, pch = 15, bty = "n", ncol = 1, cex =1 )
-  mtext(myTitle, outer = TRUE, cex =1, line=0)
+  legend("top", legend = groupLabels, col = myCols, pch = 15, bty = "n", ncol = 1, cex = 1)
+  mtext(myTitle, outer = TRUE, cex = 1, line = 0)
   garbage <- dev.off()
   cat("\n\t", output, "[saved]")
   invisible(output)
