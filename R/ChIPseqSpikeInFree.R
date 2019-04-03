@@ -425,7 +425,6 @@ ParseReadCounts <- function(data, metaFile = "sample_meta.txt", by = 0.05, prefi
 #' #     prefix="your/path/test")
 CalculateSF <- function(data, metaFile = "sample_meta.txt", prefix = "test", dataRange = c(0.1, 0.99), xMAX = NA) {
   # calculate scaling factors
-
   pctMin <- dataRange[1]
   pctMAX <- dataRange[2]
   if (class(metaFile) == "character") { # given a filename, need to load it
@@ -454,6 +453,8 @@ CalculateSF <- function(data, metaFile = "sample_meta.txt", prefix = "test", dat
   }
   #---------calculate SF-------------------------------------
   x <- data[, 1]
+
+  print(length(pctMAX))
   for (r in 2:ncol(data)) {
     y <- data[, r]
     used <- data.frame(x = x, y = y)
@@ -465,6 +466,7 @@ CalculateSF <- function(data, metaFile = "sample_meta.txt", prefix = "test", dat
     slope <- round((yMax - yMin) / (xMax - xMin), 5)
     slopes <- c(slopes, slope)
   }
+
   meta$SLOPE <- slopes
   meta$SF <- NA
   for (ab in unique(meta$ANTIBODY)) {
@@ -632,49 +634,91 @@ CalculateSF <- function(data, metaFile = "sample_meta.txt", prefix = "test", dat
 BoxplotSF <- function(input, prefix = "test") {
   # This function generates boxplot using sacaling factor table
   if (class(input) == "character") {
-    input <- read.table(input, sep = "\t", header = TRUE, fill = TRUE, stringsAsFactors = FALSE, quote = "", row.names = 1, check.names = F)
+    input <- read.table(input, sep = "\t", header = TRUE, fill = TRUE, quote = "", stringsAsFactors = FALSE, check.names = F)
+    rownames(input) <- input$ID
   }
-
   if (!"SF" %in% colnames(input) || !"ANTIBODY" %in% colnames(input) || !"GROUP" %in% colnames(input)) {
     stop("Input looks invalid for BoxplotSF().\n")
   }
+  # =======================================================
+  plotByAb <- function(metaByGAb, myTitle, PAGE) {
+    # no return value, just used side effect to generate plots
+    groupSize <- length(unique(metaByAb$GROUP2))
+    fontSize <- ifelse(groupSize > 10, 0.6, 1.0)
+    if (PAGE == 1) {
+      nCol <- ifelse(groupSizeAll > 10, 2, 1)
+      marB <- 10
+      marL <- 4
+    } else {
+      nCol <- 1
+      marB <- 15
+      marL <- 12
+    }
+    groupLabels <- sort(unique(metaByAb$GROUP2))
+    nameOrder <- ordered(metaByAb$GROUP2, levels = groupLabels)
+    if (!"COLOR" %in% colnames(metaByAb)) {
+      tim10equal <- c("skyblue", "#EF0000", "grey", "#00DFFF", "#50FFAF", "#BFFF40", "#FFCF00", "#FF6000", "#0000FF", "#800000")
+      myCols <- tim10equal[as.factor(metaByAb$GROUP2)]
+    } else {
+      myCols <- metaByAb[!duplicated(metaByAb$GROUP2), "COLOR"]
+    }
+    #---------panel left---------------
+    par(mar = c(marB, marL, marB / 2, 1))
+    bp <- boxplot(SF ~ nameOrder,
+      data = metaByAb,
+      main = myTitle, ylim = c(0, max(metaByAb$SF)),
+      las = 2, ylab = "Scaling Factors", xlab = "", xaxt = "n", cex.axis = fontSize, col = myCols,
+      cex.lab = 1, cex.main = 1, outline = T, pars = list(outcol = "white")
+    )
+    axis(1, at = seq_along(groupLabels), labels = FALSE, tck = -0.02)
+    text(
+      x = seq_along(groupLabels), y = par("usr")[3] - (par("usr")[4] - par("usr")[3]) / 30, srt = 45, adj = 1,
+      labels = groupLabels, col = myCols, xpd = TRUE, cex = fontSize
+    )
+    stripchart(SF ~ nameOrder,
+      data = metaByAb,
+      vertical = T,
+      method = "jitter", add = TRUE, jitter = 0.2, cex = 0.8, pch = 1, col = "#595959"
+    )
+    #---------panel right---------------
 
-  input$GROUP2 <- paste(input$GROUP, input$ANTIBODY, sep = ".")
-  input <- input[order(input$ANTIBODY, input$GROUP), ]
-  groupLabels <- unique(input$GROUP2)
-  if (!"COLOR" %in% colnames(input)) {
-    tim10equal <- c("skyblue", "#EF0000", "grey", "#00DFFF", "#50FFAF", "#BFFF40", "#FFCF00", "#FF6000", "#0000FF", "#800000")
-    myCols <- tim10equal[as.factor(input$GROUP2)]
-  } else {
-    myCols <- input[!duplicated(input$GROUP2), "COLOR"]
+    par(mar = c(marB, 0, marB / 2, 3), xpd = T)
+    # c(bottom, left, top, right)
+    plot.new()
+    legend("top", legend = groupLabels, col = myCols, pch = 15, bty = "n", ncol = nCol, cex = fontSize)
+    # mtext(myTitle, outer = TRUE, cex = 1, line = 0)
   }
+  # =======================================================
+
+  input$SF <- as.numeric(input$SF)
+  input$GROUP2 <- paste(input$GROUP, input$ANTIBODY, sep = ".")
+  input <- input[order(input$ANTIBODY), ]
+  groupSizeAll <- length(unique(input$GROUP2))
+  antibodyList <- unique(input$ANTIBODY)
+  imgWidth <- ifelse(groupSizeAll > 15, 8 + groupSizeAll / 10,
+                ifelse( length(antibodyList) > 1, 12, 8 )
+                )
   output <- paste0(prefix, "_boxplot.pdf")
-  pdf(output, width = 8, height = 7)
-  par(mfrow = c(1, 2), oma = c(0, 0, 3, 0), mar = c(3, 4, 4, 2) + 0.1)
+  pdf(output, width = imgWidth, height = 7)
+  # page1: All antibodies
   layout.matrix <- matrix(c(1, 2), nrow = 1, ncol = 2)
-  layout(layout.matrix, widths = c(8, 4)) # put legend on right 3/8th of the chart
-  par(mar = c(12, 6, 2, 2))
-  myTitle <- "ScalingFactor~GROUP+ANTIBODY"
-  nameOrder <- ordered(input$GROUP2, levels = groupLabels)
-  bp <- boxplot(SF ~ nameOrder,
-    data = input, main = "", ylim = c(0, max(input$SF)),
-    las = 2, ylab = "Scaling Factors", xlab = "", xaxt = "n", cex.axis = 0.8, col = myCols,
-    cex.lab = 1.2, cex.main = 0.8, outline = T, pars = list(outcol = "white")
-  )
-  axis(1, at = seq_along(groupLabels), labels = FALSE, tck = -0.02)
-  text(
-    x = seq_along(groupLabels), y = par("usr")[3] - (par("usr")[4] - par("usr")[3]) / 30, srt = 45, adj = 1,
-    labels = groupLabels, col = myCols, xpd = TRUE
-  )
-  stripchart(SF ~ nameOrder,
-    data = input, vertical = T,
-    method = "jitter", add = TRUE, jitter = 0.2, cex = 0.7, pch = 1, col = "#595959"
-  )
-  par(mar = c(6, 0, 2, 1), xpd = T)
-  # c(bottom, left, top, right)
-  plot.new()
-  legend("top", legend = groupLabels, col = myCols, pch = 15, bty = "n", ncol = 1, cex = 1)
-  mtext(myTitle, outer = TRUE, cex = 1, line = 0)
+  layout(layout.matrix, widths = c(4, 3))
+  myTitle <- "ScalingFactor ~ All antibodies"
+  par(oma = c(2, 2, 2, 2))
+  metaByAb <- input
+  plotByAb(metaByAb, myTitle, 1)
+  if (length(antibodyList) > 1) {
+    # avoid redundant and identical plot
+    # page2~END: 2 antibodies per page
+    num <- 2
+    layout.matrix <- matrix(1:(num * 2), nrow = 1, ncol = num * 2)
+    layout(layout.matrix, widths = rep(c(4, 3), num))
+    for (ab in antibodyList) {
+      metaByAb <- input[input$ANTIBODY == ab, ]
+      myTitle <- paste0("ScalingFactor ~ ", ab)
+      plotByAb(metaByAb, myTitle, 2)
+    }
+  }
   garbage <- dev.off()
   cat("\n\t", output, "[saved]")
   invisible(output)
