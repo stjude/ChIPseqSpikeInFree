@@ -46,7 +46,7 @@ A simple workflow in R environment.
 ```
 > library("ChIPseqSpikeInFree")
 ```
-###### 1. Generate a sample_meta.txt (tab-delimited txt file with header line) as follows
+###### 1. Generate a sample_meta.txt (**tab-delimited txt file with header line**) as follows
 #### Save as "/your/path/sample_meta.txt"
 
 | ID | ANTIBODY | GROUP |
@@ -74,7 +74,7 @@ In the simple usage scenario, the user should have ChIP-seq Bam files ready and 
 
 ##### 1. bamFiles: a vector of bam filenames
 
-User should follow ChIP-seq guidelines suggested by ENCODE consortium(Landt, et al., 2012) and check the data quality first. We highly recommend you 1) to  ** remove low-quality or non-unique reads ** and to 2) ** remove spike-in reads ** from your bam files before you run ChIPseqSpikeInFree normalization. 3) Your bam files must ** contain a header section ** and an alignment section.
+User should follow ChIP-seq guidelines suggested by ENCODE consortium(Landt, et al., 2012) and check the data quality first. We highly recommend you 1) to  **remove low-quality or non-unique reads** and to 2) **remove spike-in reads** from your bam files before you run ChIPseqSpikeInFree normalization. 3) Your bam files must **contain a header section** and an alignment section.
 
 ##### 2. chromFile: chromosome sizes of reference genome. 
 "hg19", "mm9","mm10","hg19" are included in the package.
@@ -86,7 +86,7 @@ $ samtools faidx genome.fa
 $ cut -f1,2 genome.fa.fai > genome.chrom.sizes
 
 ##### 3. metaFile: 
-A tab-delimited text file having three columns with a header line: ID, ANTIBODY and GROUP. Where ID is the bam file name of ChIP-seq sample that will be included for analysis; ANTIBODY represents antibody used for ChIP and GROUP describes the biological treatment or condition of this sample. 
+A tab-delimited text file **having three columns with a header line: ID, ANTIBODY and GROUP**. Where ID is the bam file name of ChIP-seq sample that will be included for analysis; ANTIBODY represents antibody used for ChIP and GROUP describes the biological treatment or condition of this sample. 
 
 
 ### Output
