@@ -74,7 +74,7 @@ In the simple usage scenario, the user should have ChIP-seq Bam files ready and 
 
 ##### 1. bamFiles: a vector of bam filenames
 
-User should follow ChIP-seq guidelines suggested by ENCODE consortium(Landt, et al., 2012) and check the data quality first. We highly recommend you 1) to  remove low-quality or non-unique reads and to 2)remove spike-in reads from your bam files before you run ChIPseqSpikeInFree normalization. 3) Your bam files must contain a header section and an alignment section.
+User should follow ChIP-seq guidelines suggested by ENCODE consortium(Landt, et al., 2012) and check the data quality first. We highly recommend you 1) to  ** remove low-quality or non-unique reads ** and to 2) ** remove spike-in reads ** from your bam files before you run ChIPseqSpikeInFree normalization. 3) Your bam files must ** contain a header section ** and an alignment section.
 
 ##### 2. chromFile: chromosome sizes of reference genome. 
 "hg19", "mm9","mm10","hg19" are included in the package.
