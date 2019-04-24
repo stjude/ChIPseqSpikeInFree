@@ -12,7 +12,7 @@ We introduce `ChIPseqSpikeInFree`, a novel ChIP-seq normalization method to effe
 
 `ChIPseqSpikeInFree` depends on `Rsamtools`, `GenomicRanges`, and `GenomicAlignments` to count reads from bam files.
 
-To install these packages, start R (version "3.4") and enter:
+To install these packages, start `R` (version "3.4") and enter:
 ```R
 > source("https://bioconductor.org/biocLite.R")
 > biocLite("Rsamtools")
@@ -20,7 +20,7 @@ To install these packages, start R (version "3.4") and enter:
 > biocLite("GenomicAlignments")
 ```
 
-If you use `R` (version "3.5") and enter:
+If you use `R` (version "3.5"), enter:
 ```R
 > if (!requireNamespace("BiocManager", quietly = TRUE))
 >     install.packages("BiocManager")
@@ -31,7 +31,7 @@ If you use `R` (version "3.5") and enter:
 
 ## Installation
 
-If you use R, enter:
+Using `R`, enter:
 
 ```R
 # Option 1. Install this package from CRAN
@@ -53,7 +53,7 @@ A simple workflow in `R` environment.
 > library("ChIPseqSpikeInFree")
 ```
 
-##### 1. Generate a sample_meta.txt (**tab-delimited txt file with header line**) as follows
+##### 1. Generate `sample_meta.txt` (**tab-delimited txt file with header line**) as follows
 
 Save as `/your/path/sample_meta.txt`
 
@@ -84,7 +84,11 @@ In the simple usage scenario, the user should have ChIP-seq bam files ready. Sam
 
 ##### 1. bamFiles: a vector of bam filenames
 
-User should follow ChIP-seq guidelines suggested by `ENCODE consortium(Landt, et al., 2012)` and check the data quality first. We highly recommend you 1) to  **remove low-quality or non-unique reads** and to 2) **remove spike-in reads** from your bam files before you run `ChIPseqSpikeInFree` normalization. 3) Your bam files must **contain a header section** and an alignment section.
+User should follow ChIP-seq guidelines suggested by `ENCODE consortium(Landt, et al., 2012)` and check the data quality first. We highly recommend the following:
+
+1) **Remove low-quality or non-unique reads**
+2) **Remove spike-in reads** from your bam files before you run `ChIPseqSpikeInFree` normalization
+3) Your bam files must **contain a header section** and an alignment section.
 
 ##### 2. chromFile: chromosome sizes of reference genome.
 `hg19`, `mm9`, `mm10`, `hg19` are included in the package.
