@@ -106,8 +106,7 @@ For other genomes, you can either:
     $ cut -f1,2 genome.fa.fai > genome.chrom.sizes
     ```
 
-##### 3. metaFile:
-A tab-delimited text file **having three columns with a header line: `ID`, `ANTIBODY`, and `GROUP`**.
+##### 3. metaFile: A tab-delimited text file **having three columns with a header line: `ID`, `ANTIBODY`, and `GROUP`**.
 
 * `ID` is the bam file name of ChIP-seq sample that will be included for analysis.
 * `ANTIBODY` represents antibody used for ChIP.
