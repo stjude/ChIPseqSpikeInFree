@@ -40,7 +40,7 @@ Using `R`, enter:
 # Option 2. Install this package from GitHub
 > install.packages("devtools")
 > library(devtools)
-> install_github("hongjianjin/ChIPseqSpikeInFree")
+> install_github("stjude/ChIPseqSpikeInFree")
 ```
 
 ### Usage
