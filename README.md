@@ -43,6 +43,14 @@ Using `R`, enter:
 > install_github("stjude/ChIPseqSpikeInFree")
 ```
 
+If you wish to build and install this package from source:
+
+```bash
+$ git clone https://github.com/stjude/ChIPseqSpikeInFree.git
+$ R CMD build ChIPseqSpikeInFree
+$ R CMD install ChIPseqSpikeInFree
+```
+
 ### Usage
 
 A simple workflow in `R` environment.
