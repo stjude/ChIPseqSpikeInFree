@@ -34,13 +34,11 @@ If you use `R` (version "3.5"), enter:
 Using `R`, enter:
 
 ```R
-# Option 1. Install this package from CRAN
-> install.packages("ChIPseqSpikeInFree")
-
-# Option 2. Install this package from GitHub
+# Install this package from GitHub
 > install.packages("devtools")
 > library(devtools)
 > install_github("stjude/ChIPseqSpikeInFree")
+
 ```
 
 If you wish to build and install this package from source:
