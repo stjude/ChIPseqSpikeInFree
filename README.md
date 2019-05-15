@@ -90,11 +90,12 @@ In the simple usage scenario, the user should have ChIP-seq bam files ready. Sam
 
 ##### 1. bamFiles: a vector of bam filenames
 
-User should follow ChIP-seq guidelines suggested by `ENCODE consortium(Landt, et al., 2012)` and check the data quality first. We highly recommend the following:
+User should follow ChIP-seq guidelines suggested by `ENCODE consortium(Landt, et al., 2012)` and check the data quality first. Some steps to check quality and prepare ChIP-seq bam files for `ChIPseqSpikeInFree` normalization:
 
-1) **Remove low-quality or non-unique reads**
-2) **Remove spike-in reads** from your bam files before you run `ChIPseqSpikeInFree` normalization
-3) Your bam files must **contain a header section** and an alignment section.
+1) run SPP tool (Marinov, et al., 2014) to do ChIP-seq data QC and use samples with **Qtag >= 1**
+2) **remove spike-in reads** from your bam files
+3) only use **good-quality or uniquely-mapped reads** your bam files
+4) bam files must **contain a header section** and an alignment section
 
 ##### 2. chromFile: chromosome sizes of reference genome.
 `hg19`, `mm9`, `mm10`, `hg19` are included in the package.
@@ -126,8 +127,9 @@ After you successfully run following `ChIPseqSpikeInFree` pipeline:
 ```
 
 Output will include: (in case that you set `prefix ="test"`)
-1. `test_SF.txt` - text result
+1. `test_SF.txt` - text result **(scaling factor table)**
     * tab-delimited text format, a table of calculated scaling factors by pipeline
+
 2. `test_boxplot.pdf` - graphical result
     * view of scaling factors as boxplot based on `test_SF.txt`
 3. `test_rawCounts.txt` - intermediate file
@@ -136,6 +138,14 @@ Output will include: (in case that you set `prefix ="test"`)
     * tab-delimited text format, a table of proportion of reads below given cutoffs (CPMW)
 5. `test_distribution.pdf` - intermediate file
     * view of proportion of reads below the given CPMW based on `test_parsedMatrix.txt`
+### Interpretation of scaling factor table from ChIPseqSpikeInFree 
+|    ID         | GROUP | ANTIBODY | COLOR | QC                                              |	TURNS                                          | SF    |
+| ------------- | ----- | -------- | ----- | ----------------------------------------------- | ----------------------------------------------- | ----- |
+|ChIPseq1.bam   | WT    | H3K27me3 | grey  | pass                                            |  0.25,0.381695212829584,6.1,0.952331770481076   | 1     |
+|ChIPseq2.bam   | K27M  | H3K27me3 | green | pass                                            |	0.2,0.342913233379086,34.7,0.958518558827915   | 5.47  |
+|INPUT1.bam     | WT    | INPUT    | black | failed: complete loss, input or poor enrichment |	0.2,0.186004756296883,0.7,0.939609844438727    | NA    |
+|INPUT2.bam     | K27M  | INPUT    | grey  | failed: complete loss, input or poor enrichment |	0.15,0.0674970364013752,0.35,0.84757601454149  | NA    |
+
 
 ## Notes
 
