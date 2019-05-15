@@ -448,51 +448,87 @@ CalculateSF <- function(data, metaFile = "sample_meta.txt", prefix = "test", xMA
     MAX_CPM <- ifelse(xMAX < MAX_CPM, xMAX, MAX_CPM)
   }
   #---------FUNCTION for quality control-------------------------------------
-  QC<-function(data){
-    QC.list <- apply(data[,2:ncol(data)],2,FUN=function(x){
-              deltaMin <- 0.001   # empirically define min increment 
-              cpmwCutoff <- 1.20  # empirically define cpmw of input
-              
-              names(x)<- data[,1]
-              used <- x[x>0 & x <0.99]
-              delta <- diff(used)
-              delta <- delta[delta>0]
-              yMin1 <- used[names(which.max(delta))]  # not used
-              deltaMin <- ifelse (min(delta) > deltaMin,min(delta), deltaMin)
-              delta2<- delta[which.max(delta):length(delta)]
-              ind<- which(delta2>0 & delta2 <= deltaMin)[1]
-              yMax1<- used[names(delta2[ind])]
-              cpmwMaxRaw1 <- as.numeric(names(delta2[ind]))
+  QC <- function(data) {
+    findLastTurnByPeak <- function(x) {
+      # define the last turning point as the highest peak in the density distribution.
+      # x must be a vector with names
+      # por : proportion of reads
+      x <- x[x > 0 & x < 0.99]
+      d <- density(x)
+      dValues <- diff(d$y)
+      turns <- which(dValues[-1] * dValues[-length(dValues)] < 0) + 1
+      if (length(turns) == 0) {
+        ind <- which.max(d$y)
+      } else {
+        ind <- max(turns)
+      }
+      list(por = d$x[ind], cpmw = as.numeric(names(x[x >= d$x[ind]][1])))
+    }
+    findLastTurnByCutoff <- function(x, cutoff = 0.001) {
+      # find the last turning point where dValue is close to cutoff
+      # x must be a vector with names
+      # por : proportion of reads
+      x <- x[x > 0 & x < 0.99]
+      dValues <- diff(x)
+      dValues <- dValues[dValues > 0]
+      cutoff <- ifelse(min(dValues) > cutoff, min(dValues), cutoff)
+      dValuesAfterPeak <- dValues[which.max(dValues):length(dValues)]
+      ind <- which(dValuesAfterPeak > 0 & dValuesAfterPeak <= cutoff)[1]
+      list(por = x[names(dValues)[ind]], cpmw = as.numeric(names(dValues)[ind]))
+    }
+    findLastTurn <- function(x) {
+      # determine the optimal last turning point from two methods
+      x <- x[x > 0 & x < 0.99]
+      res1 <- findLastTurnByPeak(x)
+      res2 <- findLastTurnByCutoff(x)
+      delta <- max(x) - res1$por
+      cat("\n delta=", delta)
+      # to deal with long tail
+      if (delta < 0.01) {
+        return(res2)
+      }
+      return(res1)
+    }
+    findFirstTurnByPeak <- function(x) {
+      # define the first turning point before the highest peak
+      # x must be a vector with names
+      # por : proportion of reads
+      x <- x[x > 0 & x < 0.99]
+      d1 <- density(x)
+      peakX <- d1$x[which.max(d1$y)]
+      d2 <- density(d1$x[d1$x < peakX])
+      por <- d2$x[which.max(d2$y)]
+      list(
+        por = por,
+        cpmw = as.numeric(names(x[x >= por][1]))
+      )
+    }
 
-              d1<- density(used)
-              peakLast <- d1$x[which.max(d1$y)]
-              cpmwMaxRaw <-  as.numeric(names(x[x>=peakLast][1]))
-              if( max(used) - peakLast > 0.02 ){
-                peakLast <- max(used)   # maxmize the range
-              }else if( max(used) - peakLast < 0.01 ){
-                peakLast <- yMax1       # minimize the range
-                cpmwMaxRaw <- min(cpmwMaxRaw1, cpmwMaxRaw)
-              }
-              cpmwMax <-  as.numeric(names(x[x>=peakLast][1]))
-              d2<- density(d1$x[d1$x < peakLast])
-              peakFirst <- d2$x[which.max(d2$y)]
-              cpmwMin <- as.numeric( names(x[x>=peakFirst][1]))
-              if (cpmwMaxRaw >= cpmwCutoff){
-                QC <- "pass"
-              }else{
-                QC <- "failed: complete loss, input or poor enrichment"
-              }
-                slope <- (peakLast - peakFirst) /(cpmwMax-cpmwMin)
-              list(QC=QC,TURNS=paste0(cpmwMin,",",peakFirst,",", cpmwMaxRaw,",",peakLast), 
-                xMin=cpmwMin,yMin=peakFirst,xMax=cpmwMax,yMax=peakLast,SLOPE=slope)
-            })
-     QC.df <- do.call(rbind.data.frame, QC.list)
-     QC.df
- }
+    QC.list <- apply(data[, 2:ncol(data)], 2, FUN = function(x) {
+      cpmwCutoff <- 1.20 # empirically define cpmw of input
+      names(x) <- data[, 1]
+      # find last turning point
+      turnLast <- findLastTurn(x)
+      turnFirst <- findFirstTurnByPeak(x)
+      if (turnLast$cpmw >= cpmwCutoff) {
+        QCstr <- "pass"
+      } else {
+        QCstr <- "failed: complete loss, input or poor enrichment"
+      }
+      slope <- (turnLast$por - turnFirst$por) / (turnLast$cpmw - turnFirst$cpmw)
+      list(
+        QC = QCstr, TURNS = paste0(turnFirst$cpmw, ",", turnFirst$por, ",", turnLast$cpmw, ",", turnLast$por),
+        xMin = turnFirst$cpmw, yMin = turnFirst$por, xMax = turnLast$cpmw, yMax = turnLast$por, SLOPE = slope
+      )
+    })
+    QC.df <- do.call(rbind.data.frame, QC.list)
+    QC.df
+  }
+
   #---------calculate SF-------------------------------------
   QC.df <- QC(data)
-  meta <- meta[, !colnames(meta) %in% c("TURNS","QC","SF")]
-  meta <- cbind(meta,QC.df[rownames(meta),])
+  meta <- meta[, !colnames(meta) %in% c("TURNS", "QC", "SF")]
+  meta <- cbind(meta, QC.df[rownames(meta), ])
   meta$SF <- NA
   for (ab in unique(meta$ANTIBODY)) {
     inds <- grep(paste0("^", ab, "$"), meta$ANTIBODY) # grep may cause problem sometime
@@ -502,124 +538,124 @@ CalculateSF <- function(data, metaFile = "sample_meta.txt", prefix = "test", xMA
   meta$SF[meta$QC != "pass"] <- NA
 
   #--------plot each antibody individually------------------------------
-    x <- data[, 1]
+  x <- data[, 1]
   imgOutput <- paste0(prefix, "_distribution.pdf")
   pdf(imgOutput, width = 14, height = 8)
-      slopesByAb <- NULL
-      for (ab in c("All Antibodies", unique(meta$ANTIBODY))) {
-        if (ab == "All Antibodies") {
-          metaByAb <- meta
-        } else {
-          metaByAb <- meta[meta$ANTIBODY == ab, ]
-        }
-        if (length(unique(meta$ANTIBODY)) == 1) {
-          # avoid redundant and identical plot
-          if (ab == unique(meta$ANTIBODY)) {
-            next
-          } else {
-            ab <- unique(meta$ANTIBODY)
-          }
-        }
-        subsetByAb <- as.data.frame(data[, metaByAb$ID], check.names = F)
-        colnames(subsetByAb) <- metaByAb$ID
-        # delete rows where all values are out of dataRange 9
-        if (ncol(subsetByAb) > 1) {  
-          kept <- rowSums(subsetByAb > 0.99) != ncol(subsetByAb)
-          x <- data[kept, 1]
-          subsetByAb <- subsetByAb[kept, ]
-         } else {
-          x <- data[, 1]
-        }
-        # Set plot layout
-        par(mfrow = c(1, 3), oma = c(0, 0, 5, 0))
-        layout.matrix <- matrix(c(1, 2, 3), nrow = 1, ncol = 3)
-        layout(
-          mat = layout.matrix,
-          widths = c(4, 3, 1)
-        ) # Widths of the three columns
-        par(mar = c(10, 6, 6, 3))
-        #-------------plot1: curves--------------------------
-        MAX_CPM <- max(x)
-        if (ncol(subsetByAb) == 1) {
-          totalPages <- 1
-        } else {
-          totalPages <- 1:ncol(subsetByAb)
-        }
-        for (r in totalPages) {
-          y <- subsetByAb[, r]
-          id <- colnames(subsetByAb)[r]
-          used <- data.frame(x = x, y = y)
-          used <- na.omit(used)
-          if (r == 1) {
-            plot(used,
-              main = "Cumulative Distribution", col = metaByAb$COLOR[r], lwd = 2, xlab = "Cutoff (CPMW)",
-              cex.lab = 1.5, cex.axis = 1.5, type = "l", ylab = "Proportion of reads", xlim = c(0, MAX_CPM),
-              ylim = c(0.0, 1.1), cex.main = 1.5
-            )
-          } else {
-            lines(used, col = metaByAb$COLOR[r], lty = 1, lwd = 2, pch = 20, cex = 0.1)
-          }
-          lines(x = c(metaByAb$xMin[r], metaByAb$xMax[r]), y = c(metaByAb$yMin[r], metaByAb$yMax[r]), col = metaByAb$COLOR[r], lty = 3)
-        }
-        legFontSize <- ifelse(ncol(subsetByAb) < 10, 1.5, 1 + 5 / ncol(subsetByAb))
-        legend("bottomright", legend = paste(gsub(".bam", "", metaByAb$ID), paste(", SF=", metaByAb$SF, sep = ""), sep = ""), col = metaByAb$COLOR, pch = 15, bty = "n", ncol = 1, cex = legFontSize)
-
-        #-----------plot2: barplot----------------------------
-        cutoffLow <- 3
-        cutoffHigh <- 12
-        Low <- which.min(abs(x - cutoffLow))
-        High <- which.min(abs(x - cutoffHigh))
-        barplotDF <- rbind(subsetByAb[Low, ], subsetByAb[High, ] - subsetByAb[Low, ])
-        barplotDF <- rbind(barplotDF, 1 - subsetByAb[High, ])
-        barplotDF <- as.data.frame(barplotDF, check.names = F)
-        colnames(barplotDF) <- metaByAb$ID
-        rownames(barplotDF) <- c(
-          paste0("< ", cutoffLow),
-          paste0(cutoffLow, "~", cutoffHigh),
-          paste0("> ", cutoffHigh)
-        )
-
-        myCols <- c("grey", "pink", "red")
-        xLabels <- colnames(barplotDF)
-        legLbls <- rownames(barplotDF)
-        par(mar = c(16, 6, 6, 0)) # c(bottom, left, top, right)
-        barNum <- ncol(subsetByAb)
-        xlimMax <- 1
-        barWidth <- ifelse(barNum < 10, xlimMax / barNum * 0.6, xlimMax / barNum * 0.8)
-        barSpace <- ifelse(barNum < 10, xlimMax / barNum * 0.4, xlimMax / barNum * 0.2)
-        bp <- barplot(as.matrix(barplotDF),
-          col = myCols, beside = F, main = "Group by CPMW Range", ylab = "Proportion Of Reads",
-          axes = FALSE, axisnames = FALSE, cex.main = 1.5, cex.lab = 1.5, cex.axis = 1.5, cex.names = 1.5,
-          xlim = c(0, xlimMax), width = barWidth, space = barSpace
-        )
-        axis(2, cex = 2)
-        axis(1, at = bp, labels = FALSE, tck = -0.02)
-        xLabels <- gsub(".bam", "", xLabels)
-        if (sum(nchar(xLabels) > 20) > 0 || barNum > 10) {
-          fontSize <- 1
-        } else {
-          fontSize <- 1.5
-        }
-
-        xLabels <- strtrim(xLabels, 20)
-        text(
-          x = bp, y = par("usr")[3] - (par("usr")[4] - par("usr")[3]) / 30, labels = xLabels,
-          col = metaByAb$COLOR, srt = 60, adj = 1, xpd = TRUE, cex = fontSize
-        )
-
-        #---------plot3: legend---------------------------------
-        # c(bottom, left, top, right)
-        par(mar = c(6, 3, 6, 1), xpd = T)
-        plot.new()
-        legend("top", fill = rev(myCols), legend = rev(legLbls), ncol = 1, cex = 2, bty = "n", title = "CPMW")
-        mtext(ab, outer = TRUE, cex = 1.5, line = 2)
-        mtext(imgOutput, outer = TRUE, cex = 1, line = 0)
+  slopesByAb <- NULL
+  for (ab in c("All Antibodies", unique(meta$ANTIBODY))) {
+    if (ab == "All Antibodies") {
+      metaByAb <- meta
+    } else {
+      metaByAb <- meta[meta$ANTIBODY == ab, ]
+    }
+    if (length(unique(meta$ANTIBODY)) == 1) {
+      # avoid redundant and identical plot
+      if (ab == unique(meta$ANTIBODY)) {
+        next
+      } else {
+        ab <- unique(meta$ANTIBODY)
       }
+    }
+    subsetByAb <- as.data.frame(data[, metaByAb$ID], check.names = F)
+    colnames(subsetByAb) <- metaByAb$ID
+    # delete rows where all values are out of dataRange 9
+    if (ncol(subsetByAb) > 1) {
+      kept <- rowSums(subsetByAb > 0.99) != ncol(subsetByAb)
+      x <- data[kept, 1]
+      subsetByAb <- subsetByAb[kept, ]
+    } else {
+      x <- data[, 1]
+    }
+    # Set plot layout
+    par(mfrow = c(1, 3), oma = c(0, 0, 5, 0))
+    layout.matrix <- matrix(c(1, 2, 3), nrow = 1, ncol = 3)
+    layout(
+      mat = layout.matrix,
+      widths = c(4, 3, 1)
+    ) # Widths of the three columns
+    par(mar = c(10, 6, 6, 3))
+    #-------------plot1: curves--------------------------
+    MAX_CPM <- max(x)
+    if (ncol(subsetByAb) == 1) {
+      totalPages <- 1
+    } else {
+      totalPages <- 1:ncol(subsetByAb)
+    }
+    for (r in totalPages) {
+      y <- subsetByAb[, r]
+      id <- colnames(subsetByAb)[r]
+      used <- data.frame(x = x, y = y)
+      used <- na.omit(used)
+      if (r == 1) {
+        plot(used,
+          main = "Cumulative Distribution", col = metaByAb$COLOR[r], lwd = 2, xlab = "Cutoff (CPMW)",
+          cex.lab = 1.5, cex.axis = 1.5, type = "l", ylab = "Proportion of reads", xlim = c(0, MAX_CPM),
+          ylim = c(0.0, 1.1), cex.main = 1.5
+        )
+      } else {
+        lines(used, col = metaByAb$COLOR[r], lty = 1, lwd = 2, pch = 20, cex = 0.1)
+      }
+      lines(x = c(metaByAb$xMin[r], metaByAb$xMax[r]), y = c(metaByAb$yMin[r], metaByAb$yMax[r]), col = metaByAb$COLOR[r], lty = 3)
+    }
+    legFontSize <- ifelse(ncol(subsetByAb) < 10, 1.5, 1 + 5 / ncol(subsetByAb))
+    legend("bottomright", legend = paste(gsub(".bam", "", metaByAb$ID), paste(", SF=", metaByAb$SF, sep = ""), sep = ""), col = metaByAb$COLOR, pch = 15, bty = "n", ncol = 1, cex = legFontSize)
+
+    #-----------plot2: barplot----------------------------
+    cutoffLow <- 3
+    cutoffHigh <- 12
+    Low <- which.min(abs(x - cutoffLow))
+    High <- which.min(abs(x - cutoffHigh))
+    barplotDF <- rbind(subsetByAb[Low, ], subsetByAb[High, ] - subsetByAb[Low, ])
+    barplotDF <- rbind(barplotDF, 1 - subsetByAb[High, ])
+    barplotDF <- as.data.frame(barplotDF, check.names = F)
+    colnames(barplotDF) <- metaByAb$ID
+    rownames(barplotDF) <- c(
+      paste0("< ", cutoffLow),
+      paste0(cutoffLow, "~", cutoffHigh),
+      paste0("> ", cutoffHigh)
+    )
+
+    myCols <- c("grey", "pink", "red")
+    xLabels <- colnames(barplotDF)
+    legLbls <- rownames(barplotDF)
+    par(mar = c(16, 6, 6, 0)) # c(bottom, left, top, right)
+    barNum <- ncol(subsetByAb)
+    xlimMax <- 1
+    barWidth <- ifelse(barNum < 10, xlimMax / barNum * 0.6, xlimMax / barNum * 0.8)
+    barSpace <- ifelse(barNum < 10, xlimMax / barNum * 0.4, xlimMax / barNum * 0.2)
+    bp <- barplot(as.matrix(barplotDF),
+      col = myCols, beside = F, main = "Group by CPMW Range", ylab = "Proportion Of Reads",
+      axes = FALSE, axisnames = FALSE, cex.main = 1.5, cex.lab = 1.5, cex.axis = 1.5, cex.names = 1.5,
+      xlim = c(0, xlimMax), width = barWidth, space = barSpace
+    )
+    axis(2, cex = 2)
+    axis(1, at = bp, labels = FALSE, tck = -0.02)
+    xLabels <- gsub(".bam", "", xLabels)
+    if (sum(nchar(xLabels) > 20) > 0 || barNum > 10) {
+      fontSize <- 1
+    } else {
+      fontSize <- 1.5
+    }
+
+    xLabels <- strtrim(xLabels, 20)
+    text(
+      x = bp, y = par("usr")[3] - (par("usr")[4] - par("usr")[3]) / 30, labels = xLabels,
+      col = metaByAb$COLOR, srt = 60, adj = 1, xpd = TRUE, cex = fontSize
+    )
+
+    #---------plot3: legend---------------------------------
+    # c(bottom, left, top, right)
+    par(mar = c(6, 3, 6, 1), xpd = T)
+    plot.new()
+    legend("top", fill = rev(myCols), legend = rev(legLbls), ncol = 1, cex = 2, bty = "n", title = "CPMW")
+    mtext(ab, outer = TRUE, cex = 1.5, line = 2)
+    mtext(imgOutput, outer = TRUE, cex = 1, line = 0)
+  }
   garbage <- dev.off()
   cat("\n\t", imgOutput, "[saved]")
   #-----------------------------------------------------
   output <- paste0(prefix, "_SF.txt")
-  outDF <- meta[, !colnames(meta) %in% c("SLOPE","xMin","yMin","xMax","yMax")]
+  outDF <- meta[, !colnames(meta) %in% c("SLOPE", "xMin", "yMin", "xMax", "yMax")]
   write.table(outDF, output, sep = "\t", quote = F, row.names = F, col.names = T)
   cat("\n\t", output, "[saved]")
   cat("\n\n  Reporting summary")
@@ -659,10 +695,10 @@ BoxplotSF <- function(input, prefix = "test") {
     input <- read.table(input, sep = "\t", header = TRUE, fill = TRUE, quote = "", stringsAsFactors = FALSE, check.names = F)
     rownames(input) <- input$ID
   }
-  if (!"SF" %in% colnames(input) || !"ANTIBODY" %in% colnames(input) || !"GROUP" %in% colnames(input) || !"QC" %in% colnames(input) ) {
+  if (!"SF" %in% colnames(input) || !"ANTIBODY" %in% colnames(input) || !"GROUP" %in% colnames(input) || !"QC" %in% colnames(input)) {
     stop("Input looks invalid for BoxplotSF().\n")
   }
-  input<- na.omit(input)  # exclude samples with SF==NA
+  input <- na.omit(input) # exclude samples with SF==NA
   # =======================================================
   plotByAb <- function(metaByGAb, myTitle, PAGE) {
     # no return value, just used side effect to generate plots
@@ -719,8 +755,8 @@ BoxplotSF <- function(input, prefix = "test") {
   groupSizeAll <- length(unique(input$GROUP2))
   antibodyList <- unique(input$ANTIBODY)
   imgWidth <- ifelse(groupSizeAll > 15, 8 + groupSizeAll / 10,
-                ifelse( length(antibodyList) > 1, 12, 8 )
-                )
+    ifelse(length(antibodyList) > 1, 12, 8)
+  )
   output <- paste0(prefix, "_boxplot.pdf")
   pdf(output, width = imgWidth, height = 7)
   # page1: All antibodies
@@ -781,7 +817,7 @@ BoxplotSF <- function(input, prefix = "test") {
 ChIPseqSpikeInFree <- function(bamFiles, chromFile = "hg19",
                                metaFile = "sample_meta.txt",
                                prefix = "test", binSize = 1000,
-                               ncores = 2, 
+                               ncores = 2,
                                xMAX = NA) {
   # perform ChIP-seq spike-free normalization in one step
   if (binSize < 100 && binSize > 10000) {
