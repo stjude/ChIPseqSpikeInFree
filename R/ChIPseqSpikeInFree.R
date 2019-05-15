@@ -513,7 +513,7 @@ CalculateSF <- function(data, metaFile = "sample_meta.txt", prefix = "test", xMA
       if (turnLast$cpmw >= cpmwCutoff) {
         QCstr <- "pass"
       } else {
-        QCstr <- "failed: complete loss, input or poor enrichment"
+        QCstr <- "fail: complete loss, input or poor enrichment"
       }
       slope <- (turnLast$por - turnFirst$por) / (turnLast$cpmw - turnFirst$cpmw)
       list(

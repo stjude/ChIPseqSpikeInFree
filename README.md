@@ -139,13 +139,17 @@ Output will include: (in case that you set `prefix ="test"`)
 5. `test_distribution.pdf` - intermediate file
     * view of proportion of reads below the given CPMW based on `test_parsedMatrix.txt`
 ### Interpretation of scaling factor table from ChIPseqSpikeInFree 
-|    ID         | GROUP | ANTIBODY | COLOR | QC                                              |	TURNS                                          | SF    |
-| ------------- | ----- | -------- | ----- | ----------------------------------------------- | ----------------------------------------------- | ----- |
-|ChIPseq1.bam   | WT    | H3K27me3 | grey  | pass                                            |  0.25,0.381695212829584,6.1,0.952331770481076   | 1     |
-|ChIPseq2.bam   | K27M  | H3K27me3 | green | pass                                            |	0.2,0.342913233379086,34.7,0.958518558827915   | 5.47  |
-|INPUT1.bam     | WT    | INPUT    | black | failed: complete loss, input or poor enrichment |	0.2,0.186004756296883,0.7,0.939609844438727    | NA    |
-|INPUT2.bam     | K27M  | INPUT    | grey  | failed: complete loss, input or poor enrichment |	0.15,0.0674970364013752,0.35,0.84757601454149  | NA    |
+|    ID         | GROUP | ANTIBODY | COLOR | QC                                             |	TURNS                                        | SF    |
+| ------------- | ----- | -------- | ----- | ---------------------------------------------- | ---------------------------------------------- | ----- |
+|ChIPseq1.bam   | WT    | H3K27me3 | grey  | pass                                           |  0.25,0.381695212829584,6.1,0.952331770481076  | 1     |
+|ChIPseq2.bam   | K27M  | H3K27me3 | green | pass                                           |  0.2,0.342913233379086,34.7,0.958518558827915  | 5.47  |
+|INPUT1.bam     | WT    | INPUT    | black | fail: complete loss, input or poor enrichment  |  0.2,0.186004756296883,0.7,0.939609844438727   | NA    |
+|INPUT2.bam     | K27M  | INPUT    | grey  | fail: complete loss, input or poor enrichment  |  0.15,0.0674970364013752,0.35,0.84757601454149 | NA    |
 
+- COLOR: defines color for each sample in output curve `*_distribution.pdf`
+- QC: quality control testing. QC failure indicates poor or no enrichment. 
+- SF: scaling factor. Only sample that passes QC will be given a SF and NA indicates sample with poor enrichment. Input sample is not required for SF calculation. Larger scaling factor could associated with a global loss of histone marks. For example, H3K27me3 is globally decreased in H3.3 K27M cells compared to WT  (SF, 5.47 vs 1). 
+- TURNS: the coordinates of two turning points [Xa, Ya, Xb, Yb] for slope-based SF calculation. 
 
 ## Notes
 
