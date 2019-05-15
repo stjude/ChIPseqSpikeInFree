@@ -146,10 +146,10 @@ Output will include: (in case that you set `prefix ="test"`)
 |INPUT1.bam     | WT    | INPUT    | black | fail: complete loss, input or poor enrichment  | NA    |  0.2,0.186004756296883,0.7,0.939609844438727   |
 |INPUT2.bam     | K27M  | INPUT    | grey  | fail: complete loss, input or poor enrichment  | NA    |  0.15,0.0674970364013752,0.35,0.84757601454149 |
 
-- COLOR: defines color for each sample in output curve `*_distribution.pdf`
+- COLOR: defines color for each sample in cumulative distribution curve `*_distribution.pdf`
 - QC: quality control testing. QC failure indicates poor or no enrichment. 
 - SF: scaling factor. Only sample that passes QC will be given a SF and NA indicates sample with poor enrichment. Input sample is not required for SF calculation. Larger scaling factor could associated with a global loss of histone marks. For example, H3K27me3 is globally decreased in H3.3 K27M cells compared to WT  (SF, 5.47 vs 1). 
-- TURNS: the coordinates of two turning points [Xa, Ya, Xb, Yb] for slope-based SF calculation. 
+- TURNS: the coordinates of two turning points [Xa, Ya, Xb, Yb] detected in cumulative distribution plot (proportion of reads below CPMW cutoffs) for slope-based SF calculation. 
 
 ## Notes
 
