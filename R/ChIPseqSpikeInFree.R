@@ -211,7 +211,7 @@ ReadMeta <- function(metaFile = "sample_meta.txt") {
   if (!"COLOR" %in% colnames(meta)) {
     myColors <- c(
       "turquoise", "blue", "brown", "yellow", "green", "red", "black", "pink", "magenta", "purple", "greenyellow", "tan", "salmon", "cyan", "midnightblue", "lightcyan",
-      "grey60", "lightgreen", "royalblue", "darkred", "darkgreen", "darkturquoise", "darkgrey", "orange", "darkorange","skyblue", "gold1","lightyellow", 
+      "grey60", "lightgreen", "royalblue", "darkred", "darkgreen", "darkturquoise", "darkgrey", "orange", "darkorange", "skyblue", "gold1", "lightyellow",
       "saddlebrown", "steelblue", "paleturquoise", "violet", "darkolivegreen", "darkmagenta", "sienna3", "yellowgreen", "skyblue3", "plum1", "orangered4", "mediumpurple3",
       "lightsteelblue1", "lightcyan1", "ivory", "floralwhite", "darkorange2", "brown4", "bisque4", "darkslateblue", "plum2", "thistle2", "thistle1", "salmon4",
       "palevioletred3", "navajowhite2", "maroon", "lightpink4", "lavenderblush3", "honeydew1", "darkseagreen4", "coral1", "antiquewhite4", "coral2", "mediumorchid", "skyblue2",
@@ -245,7 +245,7 @@ ReadMeta <- function(metaFile = "sample_meta.txt") {
       "lightsalmon1", "lawngreen", "honeydew3", "deeppink4", "cornsilk3", "azure3", "cadetblue2", "gold", "seagreen", "wheat4", "snow3", "purple3",
       "orchid4", "mediumslateblue", "lightsteelblue3", "lightcyan3", "ivory2", "gold2", "darkorange3", "cadetblue4", "azure1", "darkorange1", "paleturquoise2", "steelblue2",
       "tomato1", "seagreen2", "palevioletred4", "navy", "maroon1", "lightsalmon", "lavenderblush4", "honeydew2", "deeppink3", "cornsilk1", "azure2", "cadetblue3",
-      "gold4", "seagreen1", "yellow1", "snow1", "purple1", "orchid2", "mediumseagreen", "lightsteelblue2", "lightcyan2", "ivory1",  "white"
+      "gold4", "seagreen1", "yellow1", "snow1", "purple1", "orchid2", "mediumseagreen", "lightsteelblue2", "lightcyan2", "ivory1", "white"
     )
     groupNum <- as.numeric(factor(paste(meta$ANTIBODY, meta$GROUP, sep = "")))
     meta$COLOR <- myColors[groupNum]
@@ -423,6 +423,7 @@ ParseReadCounts <- function(data, metaFile = "sample_meta.txt", by = 0.05, prefi
 #' #     prefix="your/path/test")
 CalculateSF <- function(data, metaFile = "sample_meta.txt", prefix = "test", xMAX = NA) {
   # calculate scaling factors
+  options(stringsAsFactors = F)
   if (class(metaFile) == "character") { # given a filename, need to load it
     meta <- ReadMeta(metaFile)
   } else {
@@ -447,89 +448,95 @@ CalculateSF <- function(data, metaFile = "sample_meta.txt", prefix = "test", xMA
     MAX_CPM <- ifelse(xMAX < MAX_CPM, xMAX, MAX_CPM)
   }
   #---------FUNCTION for quality control-------------------------------------
-  QC<-function(data, cutoff_1stTurn="auto", cutoff_QC=1.2){
-    # cutoff_1stTurn: "auto"[default] or value between 0.1-0.8; 0.5 works well empirically 
+  QC <- function(data, cutoff_1stTurn = "auto", cutoff_QC = 1.2) {
+    # cutoff_1stTurn: "auto"[default] or value between 0.1-0.8; 0.5 works well empirically
     # cutoff_QC: 1.2 detect 90% of input samples as QC failure [default]
-    findLastTurnByPeak<-function(x){
-        # define the last turning point as the highest peak in the density distribution.
-        # x must be a vector with names 
-        # por : proportion of reads
-        x <- x[x >0 & x<0.99]
-        d<- density(x)
-        dValues <- diff(d$y)
-        turns <- which(dValues[-1] * dValues[-length(dValues)] < 0) + 1
-        if (length(turns) == 0){
-            ind<-which.max(d$y)
-        }else{
-            ind<-max(turns)
-        }
-       list(por=round(d$x[ind],4), 
-            cpmw=as.numeric(names(x[x>=d$x[ind]][1])))
+    findLastTurnByPeak <- function(x) {
+      # define the last turning point as the highest peak in the density distribution.
+      # x must be a vector with names
+      # por : proportion of reads
+      x <- x[x > 0 & x < 0.99]
+      d <- density(x)
+      dValues <- diff(d$y)
+      turns <- which(dValues[-1] * dValues[-length(dValues)] < 0) + 1
+      if (length(turns) == 0) {
+        ind <- which.max(d$y)
+      } else {
+        ind <- max(turns)
+      }
+      list(
+        por = round(d$x[ind], 4),
+        cpmw = as.numeric(names(x[x >= d$x[ind]][1]))
+      )
     }
-    findLastTurnByCutoff <-function(x, minDiff=0.001){
-        # find the last turning point where dValue is close to minDiff
-        # x must be a vector with names 
-        # por : proportion of reads
-        x <- x[x >0 & x<0.99]
-        dValues <- diff(x)
-        dValues <- dValues[dValues>0]
-        minDiff <- ifelse (min(dValues) > minDiff ,min(dValues), minDiff )
-        dValuesAfterPeak<- dValues[which.max(dValues):length(dValues)]
-        ind<- which(dValuesAfterPeak >0 & dValuesAfterPeak <= minDiff)[1]
-        list(por=round(x[names(dValues)[ind]],4),
-             cpmw=as.numeric(names(dValues)[ind]))
+    findLastTurnByCutoff <- function(x, minDiff = 0.001) {
+      # find the last turning point where dValue is close to minDiff
+      # x must be a vector with names
+      # por : proportion of reads
+      x <- x[x > 0 & x < 0.99]
+      dValues <- diff(x)
+      dValues <- dValues[dValues > 0]
+      minDiff <- ifelse(min(dValues) > minDiff, min(dValues), minDiff)
+      dValuesAfterPeak <- dValues[which.max(dValues):length(dValues)]
+      ind <- which(dValuesAfterPeak > 0 & dValuesAfterPeak <= minDiff)[1]
+      list(
+        por = round(x[names(dValues)[ind]], 4),
+        cpmw = as.numeric(names(dValues)[ind])
+      )
     }
-    findLastTurn <-function(x){
-        # determine the optimal last turning point from two methods
-         x <- x[x >0 & x<0.99]
-         res1 <- findLastTurnByPeak(x)
-         res2 <- findLastTurnByCutoff(x)
-         delta <- max(x) - res1$por
-         # to deal with sample haveing bad enrichment and long tail of distribution
-         if( delta < 0.01 ){
-             return(res2)
-         }
-         return(res1)  
+    findLastTurn <- function(x) {
+      # determine the optimal last turning point from two methods
+      x <- x[x > 0 & x < 0.99]
+      res1 <- findLastTurnByPeak(x)
+      res2 <- findLastTurnByCutoff(x)
+      delta <- max(x) - res1$por
+      # to deal with sample haveing bad enrichment and long tail of distribution
+      if (delta < 0.01) {
+        return(res2)
+      }
+      return(res1)
     }
-    findFirstTurn <-function(x, cutoff=cutoff_1stTurn){
-        # define the first turning point before the highest peak
-        # x must be a vector with names 
-        # cutoff: "auto" or value between 0.1-0.8
-        # por : proportion of reads
-        if (tolower(cutoff)=="auto"){
-            x <- x[x >0 & x<0.99]
-            d1<- density(x)
-            Xpeak <- d1$x[which.max(d1$y)]
-            d2<- density(d1$x[d1$x < Xpeak])
-            por <-min(d2$x[which.max(d2$y):length(d2$x)])
-            cpmw <- as.numeric(names(x[x>=por][1]))
-        }else if(as.numeric(cutoff) >=0.1 | as.numeric(cutoff) <= 0.8 ){
-          por <- x[which(as.numeric(names(x))>=cutoff)[1]]
-          cpmw <- cutoff
-          list(cpmw=cutoff,por=por)
-        } else{
-          stop("\n**Invalid cutoff for detection of the first turning point**\n")
-        }
-        list(por=round(por,4), cpmw=cpmw) 
+    findFirstTurn <- function(x, cutoff = cutoff_1stTurn) {
+      # define the first turning point before the highest peak
+      # x must be a vector with names
+      # cutoff: "auto" or value between 0.1-0.8
+      # por : proportion of reads
+      if (tolower(cutoff) == "auto") {
+        x <- x[x > 0 & x < 0.99]
+        d1 <- density(x)
+        Xpeak <- d1$x[which.max(d1$y)]
+        d2 <- density(d1$x[d1$x < Xpeak])
+        por <- min(d2$x[which.max(d2$y):length(d2$x)])
+        cpmw <- as.numeric(names(x[x >= por][1]))
+      } else if (as.numeric(cutoff) >= 0.1 | as.numeric(cutoff) <= 0.8) {
+        por <- x[which(as.numeric(names(x)) >= cutoff)[1]]
+        cpmw <- cutoff
+        list(cpmw = cutoff, por = por)
+      } else {
+        stop("\n**Invalid cutoff for detection of the first turning point**\n")
+      }
+      list(por = round(por, 4), cpmw = cpmw)
     }
 
-    QC.list <- apply(data[,2:ncol(data)],2,FUN=function(x, cutoff=cutoff_QC){
-              names(x)<- data[,1]
-              # find last turning point
-              turnLast <- findLastTurn(x)
-              turnFirst <- findFirstTurn(x)
-              if (turnLast$cpmw >= cutoff){
-                QCstr <- "pass"
-              }else{
-                QCstr <- "fail: complete loss, input or poor enrichment"
-              }
-                slope <- (turnLast$por - turnFirst$por) /(turnLast$cpmw - turnFirst$cpmw)
-              list(QC=QCstr,TURNS=paste0(turnFirst$cpmw,",",turnFirst$por,",", turnLast$cpmw,",",turnLast$por), 
-                xMin=turnFirst$cpmw,yMin=turnFirst$por,xMax=turnLast$cpmw,yMax=turnLast$por,SLOPE=slope)
-            })
-     QC.df <- do.call(rbind.data.frame, QC.list)
-     QC.df
- }
+    QC.list <- apply(data[, 2:ncol(data)], 2, FUN = function(x, cutoff = cutoff_QC) {
+      names(x) <- data[, 1]
+      # find last turning point
+      turnLast <- findLastTurn(x)
+      turnFirst <- findFirstTurn(x)
+      if (turnLast$cpmw >= cutoff) {
+        QCstr <- "pass"
+      } else {
+        QCstr <- "fail: complete loss, input or poor enrichment"
+      }
+      slope <- (turnLast$por - turnFirst$por) / (turnLast$cpmw - turnFirst$cpmw)
+      list(
+        QC = QCstr, TURNS = paste0(turnFirst$cpmw, ",", turnFirst$por, ",", turnLast$cpmw, ",", turnLast$por),
+        xMin = turnFirst$cpmw, yMin = turnFirst$por, xMax = turnLast$cpmw, yMax = turnLast$por, SLOPE = slope
+      )
+    })
+    QC.df <- do.call(rbind.data.frame, QC.list)
+    QC.df
+  }
 
   #---------calculate SF-------------------------------------
   QC.df <- QC(data)
@@ -579,7 +586,7 @@ CalculateSF <- function(data, metaFile = "sample_meta.txt", prefix = "test", xMA
       mat = layout.matrix,
       widths = c(4, 3, 1)
     ) # Widths of the three columns
-    par(mar = c(10, 6, 6, 3))
+    par(mar = c(10, 6, 6, 2))
     #-------------plot1: curves--------------------------
     MAX_CPM <- max(x)
     if (ncol(subsetByAb) == 1) {
@@ -588,97 +595,106 @@ CalculateSF <- function(data, metaFile = "sample_meta.txt", prefix = "test", xMA
       totalPages <- 1:ncol(subsetByAb)
     }
     for (r in totalPages) {
-          y <- subsetByAb[, r]
-          id <- colnames(subsetByAb)[r]
-          used <- data.frame(x = x, y = y)
-          used <- na.omit(used)
-          if (r == 1) {
-            plot(used,
-              main = "Cumulative Distribution", col = metaByAb$COLOR[r], lwd = 2, xlab = "Cutoff (CPMW)",
-              cex.lab = 1.5, cex.axis = 1.5, type = "l", ylab = "Proportion of reads", xlim = c(0, MAX_CPM),
-              ylim = c(0.0, 1.1), cex.main = 1.5
-            )
-          } else {
-            lines(used, col = metaByAb$COLOR[r], lty = 1, lwd = 2, pch = 20, cex = 0.1)
-          }
-          if(! is.na(metaByAb$SF[r])){ # skip slope line for QC-failed sample
-           lines(x = c(metaByAb$xMin[r], metaByAb$xMax[r]), y = c(metaByAb$yMin[r], metaByAb$yMax[r]), col = metaByAb$COLOR[r], lty = 3)
-          }
-        }
-        labelLength<- max(nchar(colnames(subsetByAb)))
-        fontSize <- ifelse(labelLength <40, 1.5, 0.8)
-        legFontSize <- ifelse(ncol(subsetByAb) < 10 , fontSize, 0.4 + 5 / ncol(subsetByAb))
-        legend("bottomright", legend = paste(gsub(".bam", "", metaByAb$ID), paste(", SF=", metaByAb$SF, sep = ""), sep = ""), 
-                col = metaByAb$COLOR, text.col = metaByAb$COLOR,pch = 15, bty = "n", ncol = 1, cex = legFontSize)
-
-        #-----------plot2: barplot----------------------------
-        cutoffLow <-  median(metaByAb$xMin[r])
-        cutoffHigh <- median(metaByAb$xMax[r])
-        if(ab == "All Antibodies"){ # for all antibody
-           cutoffLow <- 0.5
-           cutoffHigh <- 1.2
-        }
-        if (cutoffHigh >= 3){       # high enrichment
-           myCols <- c(gray(8/10),"pink", "red")  
-        }else if(cutoffHigh >= 1.2){ # median enrichment 
-           myCols <- c(gray(c(8,5)/10),"pink") 
-        }else{                       # poor enrichment
-           myCols <-  gray(c(8,5,3)/10)
-        }
-        Low <- which.min(abs(x - cutoffLow))
-        High <- which.min(abs(x - cutoffHigh))
-        barplotDF <- rbind(subsetByAb[Low, ], subsetByAb[High, ] - subsetByAb[Low, ])
-        barplotDF <- rbind(barplotDF, 1 - subsetByAb[High, ])
-        barplotDF <- as.data.frame(barplotDF, check.names = F)
-        colnames(barplotDF) <- metaByAb$ID
-        rownames(barplotDF) <- c(
-          paste0("< ", cutoffLow),
-          paste0(cutoffLow, "~", cutoffHigh),
-          paste0("> ", cutoffHigh)
+      y <- subsetByAb[, r]
+      id <- colnames(subsetByAb)[r]
+      used <- data.frame(x = x, y = y)
+      used <- na.omit(used)
+      if (r == 1) {
+        plot(used,
+          main = "Cumulative Distribution", col = metaByAb$COLOR[r], lwd = 2, xlab = "Cutoff (CPMW)",
+          cex.lab = 1.5, cex.axis = 1.5, type = "l", ylab = "Proportion of reads", xlim = c(0, MAX_CPM),
+          ylim = c(0.0, 1.1), cex.main = 1.5
         )
+      } else {
+        lines(used, col = metaByAb$COLOR[r], lty = 1, lwd = 2, pch = 20, cex = 0.1)
+      }
+      if (!is.na(metaByAb$SF[r])) { # skip slope line for QC-failed sample
+        lines(x = c(metaByAb$xMin[r], metaByAb$xMax[r]), y = c(metaByAb$yMin[r], metaByAb$yMax[r]), col = metaByAb$COLOR[r], lty = 3)
+      }
+    }
+    labelLength <- max(nchar(colnames(subsetByAb)))
+    fontSize <- ifelse(labelLength < 40, 1.5, 0.8)
+    legFontSize <- ifelse(ncol(subsetByAb) < 10, fontSize, 0.4 + 5 / ncol(subsetByAb))
+    legend("bottomright",
+      legend = paste(gsub(".bam", "", metaByAb$ID), paste(", SF=", metaByAb$SF, sep = ""), sep = ""),
+      col = metaByAb$COLOR, text.col = metaByAb$COLOR, pch = 15, bty = "n", ncol = 1, cex = legFontSize
+    )
 
-        xLabels <- colnames(barplotDF)
-        xLabels <- gsub(".bam", "", xLabels)
-        xLabels <- gsub(".BAM", "", xLabels)
-         barNum <- ncol(subsetByAb)
-       if (max(nchar(xLabels)) > 40 || barNum > 10) {
-          fontSize <- 0.8
-        } else {
-          fontSize <- 1.5
-        }
-        if (max(nchar(xLabels)) > 50){
-           xLabels <- strtrim(xLabels, 50)
-           bottomMargin <- 32
-        }else if (max(nchar(xLabels)) < 20){
-           bottomMargin <- 16
-        }else{
-           xLabels <- strtrim(xLabels, 40)
-           bottomMargin <- 25
-        }
-        legLbls <- rownames(barplotDF)
-        par(mar = c(bottomMargin, 10, 6, 0)) # c(bottom, left, top, right)
-        xlimMax <- 1
-        barWidth <- ifelse(barNum < 10, xlimMax / barNum * 0.6, xlimMax / barNum * 0.8)
-        barSpace <- ifelse(barNum < 10, xlimMax / barNum * 0.4, xlimMax / barNum * 0.2)
-        bp <- barplot(as.matrix(barplotDF),
-          col = myCols, beside = F, main = "Group by CPMW Range", ylab = "Proportion Of Reads",
-          axes = FALSE, axisnames = FALSE, cex.main = 1.5, cex.lab = 1.5, cex.axis = 1.5, cex.names = 1.5,
-          xlim = c(0, xlimMax), width = barWidth, space = barSpace
-        )
-        axis(2, cex = 2)
-        axis(1, at = bp, labels = FALSE, tck = -0.02)
-        text(
-          x = bp, y = par("usr")[3] - (par("usr")[4] - par("usr")[3]) / 30, labels = xLabels,
-          col = metaByAb$COLOR, srt = 60, adj = 1, xpd = TRUE, cex = fontSize
-        )
+    #-----------plot2: barplot----------------------------
+    cpmw_grps <- do.call(rbind.data.frame, strsplit(metaByAb$TURNS, ","))
+    cpmw_Xa <- as.numeric(as.character(cpmw_grps[, 1]))
+    cpmw_Xb <- as.numeric(as.character(cpmw_grps[, 3]))
+    datTmp1 <- data.frame(factor = metaByAb$GROUP, value = cpmw_Xa)
+    Xa <- max(with(datTmp1, tapply(value, factor, median)))
+    datTmp2 <- data.frame(factor = metaByAb$GROUP, value = cpmw_Xb)
+    Xb <- min(with(datTmp2, tapply(value, factor, median)))
+    cutoffLow <- round(Xa, 2)
+    cutoffHigh <- round(Xb, 2)
+    if (ab == "All Antibodies") { # for all antibody
+      cutoffLow <- 0.5
+      cutoffHigh <- 1.2
+    }
+    if (cutoffHigh >= 3) { # high enrichment
+      myCols <- c(gray(8 / 9), "pink", "red")
+    } else if (cutoffHigh >= 1.2) { # median enrichment
+      myCols <- c(gray(c(8, 7) / 9), "pink")
+    } else { # poor enrichment
+      myCols <- gray(c(8, 7, 6) / 9)
+    }
+    Low <- which.min(abs(x - cutoffLow))
+    High <- which.min(abs(x - cutoffHigh))
+    barplotDF <- rbind(subsetByAb[Low, ], subsetByAb[High, ] - subsetByAb[Low, ])
+    barplotDF <- rbind(barplotDF, 1 - subsetByAb[High, ])
+    barplotDF <- as.data.frame(barplotDF, check.names = F)
+    colnames(barplotDF) <- metaByAb$ID
+    rownames(barplotDF) <- c(
+      paste0("Low (0-", cutoffLow, ")"),
+      paste0("Low [", cutoffLow, "~", cutoffHigh, "]"),
+      paste0("High (>", cutoffHigh, ")")
+    )
 
-        #---------plot3: legend---------------------------------
-        # c(bottom, left, top, right)
-        par(mar = c(6, 3, 6, 1), xpd = T)
-        plot.new()
-        legend("top", fill = rev(myCols), legend = rev(legLbls), ncol = 1, cex = 2, bty = "n", title = "CPMW")
-        mtext(ab, outer = TRUE, cex = 1.5, line = 2)
-        mtext(imgOutput, outer = TRUE, cex = 1, line = 0)
+    xLabels <- colnames(barplotDF)
+    xLabels <- gsub(".bam", "", xLabels)
+    xLabels <- gsub(".BAM", "", xLabels)
+    barNum <- ncol(subsetByAb)
+    if (max(nchar(xLabels)) > 40 || barNum > 10) {
+      fontSize <- 0.8
+    } else {
+      fontSize <- 1.5
+    }
+    if (max(nchar(xLabels)) > 50) {
+      xLabels <- strtrim(xLabels, 50)
+      bottomMargin <- 32
+    } else if (max(nchar(xLabels)) < 20) {
+      bottomMargin <- 16
+    } else {
+      xLabels <- strtrim(xLabels, 40)
+      bottomMargin <- 25
+    }
+    legLbls <- rownames(barplotDF)
+    par(mar = c(bottomMargin, 10, 6, 0)) # c(bottom, left, top, right)
+    xlimMax <- 1
+    barWidth <- ifelse(barNum < 10, xlimMax / barNum * 0.7, xlimMax / barNum * 0.9)
+    barSpace <- ifelse(barNum < 10, xlimMax / barNum * 0.45, xlimMax / barNum * 0.25)
+    bp <- barplot(as.matrix(barplotDF),
+      col = myCols, beside = F, main = "Group by enrichment level", ylab = "Proportion of reads",
+      axes = FALSE, axisnames = FALSE, cex.main = 1.5, cex.lab = 1.5, cex.axis = 1.5, cex.names = 1.5,
+      xlim = c(0, xlimMax), width = barWidth, space = barSpace
+    )
+    axis(2, cex = 2)
+    axis(1, at = bp, labels = FALSE, tck = -0.02)
+    text(
+      x = bp, y = par("usr")[3] - (par("usr")[4] - par("usr")[3]) / 30, labels = xLabels,
+      col = metaByAb$COLOR, srt = 60, adj = 1, xpd = TRUE, cex = fontSize
+    )
+
+    #---------plot3: legend---------------------------------
+    # c(bottom, left, top, right)
+    par(mar = c(6, 2, 6, 2), xpd = T)
+    plot.new()
+    legend("top", fill = rev(myCols), legend = rev(legLbls), ncol = 1, cex = 1.2, bty = "n", title = "Group[CPMW]")
+    mtext(ab, outer = TRUE, cex = 1.5, line = 2)
+    mtext(imgOutput, outer = TRUE, cex = 1, line = 0)
   }
   garbage <- dev.off()
   cat("\n\t", imgOutput, "[saved]")
@@ -728,9 +744,9 @@ BoxplotSF <- function(input, prefix = "test") {
     stop("Input looks invalid for BoxplotSF().\n")
   }
   input <- na.omit(input) # exclude samples with SF==NA
-  if (nrow(input) == 0 | nrow(input) ==0){
-   cat("\n  **no data for boxplot**\n")
-   return (NULL)
+  if (nrow(input) == 0 | nrow(input) == 0) {
+    cat("\n  **no data for boxplot**\n")
+    return(NULL)
   }
   # =======================================================
   plotByAb <- function(metaByGAb, myTitle, PAGE) {
