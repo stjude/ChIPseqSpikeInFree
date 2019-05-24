@@ -95,7 +95,20 @@ User should follow ChIP-seq guidelines suggested by `ENCODE consortium(Landt, et
 1) run SPP tool (Marinov, et al., 2014) to do ChIP-seq data QC and use samples with **Qtag >= 1**
 2) **remove spike-in reads** from your bam files
 3) only use **good-quality or uniquely-mapped reads** your bam files
+	```bash
+	      java -jar picard.jar MarkDuplicates \
+	      I=input.bam \
+	      O=rmdup.bam \
+	      M=rmdup_metrics.txt\
+	      CREATE_INDEX=true \
+              ASSUME_SORTED=false \
+              REMOVE_DUPLICATES=true"
+	samtools view -hb -q 1  rmdup.bam > rmdupq1.bam
+	```
 4) bam files must **contain a header section** and an alignment section
+	```bash
+	samtools view -H rmdupq1.bam
+	```
 
 ##### 2. chromFile: chromosome sizes of reference genome.
 `hg19`, `mm9`, `mm10`, `hg19` are included in the package.
