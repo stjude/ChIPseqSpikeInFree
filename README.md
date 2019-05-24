@@ -92,11 +92,11 @@ In the simple usage scenario, the user should have ChIP-seq bam files ready. Sam
 
 User should follow ChIP-seq guidelines suggested by `ENCODE consortium(Landt, et al., 2012)` and check the data quality first. Some steps to check quality and prepare ChIP-seq bam files for `ChIPseqSpikeInFree` normalization:
 
-1) run SPP tool (Marinov, et al., 2014) to do ChIP-seq data QC and use samples with **Qtag >= 1**
-2) **remove spike-in reads** from your bam files
-3) only use **good-quality or uniquely-mapped reads** your bam files
+* run SPP tool (Marinov, et al., 2014) to do ChIP-seq data QC and use samples with **Qtag >= 1**
+* **remove spike-in reads** from your bam files
+* only use **good-quality or uniquely-mapped reads** your bam files
 	```bash
-	      java -jar picard.jar MarkDuplicates \
+	java -jar picard.jar MarkDuplicates \
 	      I=input.bam \
 	      O=rmdup.bam \
 	      M=rmdup_metrics.txt\
@@ -105,7 +105,7 @@ User should follow ChIP-seq guidelines suggested by `ENCODE consortium(Landt, et
               REMOVE_DUPLICATES=true"
 	samtools view -hb -q 1  rmdup.bam > rmdupq1.bam
 	```
-4) bam files must **contain a header section** and an alignment section
+* bam files must **contain a header section** and an alignment section
 	```bash
 	samtools view -H rmdupq1.bam
 	```
