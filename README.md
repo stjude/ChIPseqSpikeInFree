@@ -4,7 +4,7 @@ A Spike-in Free ChIP-Seq Normalization Approach for Detecting Global Changes in 
 
 ## Background
 
-: Traditional reads per million (RPM) normalization method is inappropriate for the evaluation of ChIP-seq data when the treatment or mutation has the global effect. Changes in global levels of histone modifications can be detected by using exogenous reference spike-in controls. However, most of the ChIP-seq studies have overlooked the normalization problem that have to be corrected with spike-in. A method that retrospectively renormalize data sets without spike-in is lacking. 
+Traditional reads per million (RPM) normalization method is inappropriate for the evaluation of ChIP-seq data when the treatment or mutation has the global effect. Changes in global levels of histone modifications can be detected by using exogenous reference spike-in controls. However, most of the ChIP-seq studies have overlooked the normalization problem that have to be corrected with spike-in. A method that retrospectively renormalize data sets without spike-in is lacking. 
 
 We develop `ChIPseqSpikeInFree`, a novel ChIP-seq normalization method to effectively determine scaling factors for samples across various conditions and treatments, which does not rely on exogenous spike-in chromatin or peak detection to reveal global changes in histone modification occupancy. This method is capable of revealing the similar magnitude of global changes as the spike-in method.
 
@@ -148,7 +148,7 @@ Output will include: (in case that you set `prefix ="test"`)
     * tab-delimited text format, a table of calculated scaling factors by pipeline
 2. `test_distribution.pdf` - graphical result [Figure 1.A,B](#Graphical-results) or [PDF file](docs/test_distribution.pdf))
     * view of proportion of reads below the given CPMW based on `test_parsedMatrix.txt`
-3. `test_boxplot.pdf` - graphical result  [Figure 1.C](#Graphical) or [PDF file](docs/test_boxplot.pdf)
+3. `test_boxplot.pdf` - graphical result  [Figure 1.C](#Graphical-results) or [PDF file](docs/test_boxplot.pdf)
     * view of scaling factors as boxplot based on `test_SF.txt`
 4. `test_rawCounts.txt` - intermediate file
     * tab-delimited text format, a table of raw read counts for each 1kb bin across genome
@@ -174,10 +174,9 @@ Output will include: (in case that you set `prefix ="test"`)
 
 This repository contains the following:
 - source code
-- documentation
+- documentation [[PDF file](docs/ChIPseqSpikeInFree_1.2.2.pdf)]
 - chromFile of human and mouse reference genome (`hg19`, `mm9`, `mm10`, and `hg38`)
 - an example of `sample_meta.txt`
-- manual [PDF file](docs/ChIPseqSpikeInFree_1.2.2.pdf)
 
 Users will still need to source and provide the following:
 - bam files
