@@ -1,0 +1,5 @@
+ID	GROUP	ANTIBODY	COLOR	QC	TURNS	SF
+K27M-H3K27me3.rmdupq1.bam	K27M	H3K27me3	green	pass	0.2,0.3429,34.7,0.9585	5.47
+WT-H3K27me3.rmdupq1.bam	WT	H3K27me3	grey	pass	0.25,0.3817,6.1,0.9523	1
+K27M-INPUT.rmdupq1.bam	K27M	INPUT	brown	fail: complete loss, input or poor enrichment	0.15,0.0675,0.35,0.8476	NA
+WT-INPUT.rmdupq1.bam	WT	INPUT	black	fail: complete loss, input or poor enrichment	0.2,0.186,0.7,0.9396	NA

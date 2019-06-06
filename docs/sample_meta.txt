@@ -1,0 +1,5 @@
+ID	GROUP	ANTIBODY	COLOR
+K27M-H3K27me3.rmdupq1.bam	K27M	H3K27me3	green
+WT-H3K27me3.rmdupq1.bam	WT	H3K27me3	grey
+K27M-INPUT.rmdupq1.bam	K27M	INPUT	brown
+WT-INPUT.rmdupq1.bam	WT	INPUT	black

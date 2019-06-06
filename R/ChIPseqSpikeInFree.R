@@ -157,6 +157,15 @@ CountRawReads <- function(bamFiles, chromFile = "hg19", prefix = "test", singleE
   } else {
     datOut <- data.frame(bin = rownames(dat.NoChr), dat.NoChr, check.names = F)
   }
+
+  libSizeFlag <- colSums(datOut[,-1])>10^6
+  keptSamples <- colnames(datOut[,-1])[libSizeFlag] # remove it if total library size is lesss than 10^6
+  if(length(keptSamples) < ncol(datOut[,-1])){
+    cat("\n*WARNING* Some samples were removed due to library size(< 10^6) or no read count [ n=",sum(!libSizeFlag),"]:")
+    cat("\n\t", colnames(datOut)[!libSizeFlag], "\n")
+  }
+  datOut <- datOut[, c("bin",keptSamples)]
+
   rm(list = c("dat.Chr", "dat.NoChr"))
   options(scipen = 99) # disable scientific notation when writing out
   outFile <- paste0(prefix, "_rawCounts.txt")
@@ -181,12 +190,12 @@ CountRawReads <- function(bamFiles, chromFile = "hg19", prefix = "test", singleE
 #' head(meta, n = 1)
 #' meta
 #' #                                             ID ANTIBODY GROUP COLOR
-#' #  H3K27me3-NSH.K27M.A.bam H3K27me3-NSH.K27M.A.bam H3K27me3  K27M   red
-#' #  H3K27me3-NSH.K27M.B.bam H3K27me3-NSH.K27M.B.bam H3K27me3  K27M   red
-#' #  H3K27me3-NSH.K27M.C.bam H3K27me3-NSH.K27M.C.bam H3K27me3  K27M   red
-#' #  H3K27me3-NSH.WT.D.bam     H3K27me3-NSH.WT.D.bam H3K27me3    WT  blue
-#' #  H3K27me3-NSH.WT.E.bam     H3K27me3-NSH.WT.E.bam H3K27me3    WT  blue
-#' #  H3K27me3-NSH.WT.F.bam     H3K27me3-NSH.WT.F.bam H3K27me3    WT  blue
+#' #  H3K27me3-NSH.K27M.A.bam H3K27me3-NSH.K27M.A.bam H3K27me3  K27M   green
+#' #  H3K27me3-NSH.K27M.B.bam H3K27me3-NSH.K27M.B.bam H3K27me3  K27M   green
+#' #  H3K27me3-NSH.K27M.C.bam H3K27me3-NSH.K27M.C.bam H3K27me3  K27M   green
+#' #  H3K27me3-NSH.WT.D.bam     H3K27me3-NSH.WT.D.bam H3K27me3    WT  grey
+#' #  H3K27me3-NSH.WT.E.bam     H3K27me3-NSH.WT.E.bam H3K27me3    WT  grey
+#' #  H3K27me3-NSH.WT.F.bam     H3K27me3-NSH.WT.F.bam H3K27me3    WT  grey
 ReadMeta <- function(metaFile = "sample_meta.txt") {
   # read in sample metadata file
 
@@ -318,12 +327,21 @@ ParseReadCounts <- function(data, metaFile = "sample_meta.txt", by = 0.05, prefi
       stop("Not found rawCount table and your input is not a data.frame.\n")
     }
   }
+  libSizeFlag <- colSums(data)>10^6
+  keptSamples <- colnames(data)[libSizeFlag] # remove it if total library size is lesss than 10^6
+  if(length(keptSamples) < ncol(data)){
+    cat("\n*WARNING* Some samples were removed due to small library size or no read count [ n=",sum(!libSizeFlag),"]:")
+    cat("\n\t", colnames(data)[!libSizeFlag], "\n")
+  }
+  data <- data[, keptSamples]
+
   kept <- intersect(metaFile$ID, colnames(data))
   if (length(kept) == 0) {
     cat("\n** Oooops: you need to change metadata file **\n")
     stop("Please check whether you IDs in metaFile match with colnames(bam filenames) in parsedMatrix.\n\n")
   }
-
+  
+  
   metaFile <- metaFile[kept, ] # only use samples listed in metaFile
   # Calculate the number of cores
   avai_cores <- detectCores() - 1
@@ -343,8 +361,6 @@ ParseReadCounts <- function(data, metaFile = "sample_meta.txt", by = 0.05, prefi
 
     CPM <- Reduce("cbind", CPM)
     colnames(CPM) <- colnames(data)
-    #  print(dim(CPM))
-    #  cat("\n\tCPM was calculateded.\n")
 
     # remove extreme values potential from centromere regions
     MAX_CPMW <- 150
@@ -364,7 +380,6 @@ ParseReadCounts <- function(data, metaFile = "sample_meta.txt", by = 0.05, prefi
       MAX <- MAX_CPMW
     }
     SEQ <- seq(0, MAX, by = by)
-    # cat("\n\tMAX = ",MAX,"SEQ = ",length(SEQ),"\n")
     if (by > MAX || length(SEQ) < 100) {
       by <- MAX / 100
       SEQ <- seq(0, MAX, by = by)
@@ -372,16 +387,21 @@ ParseReadCounts <- function(data, metaFile = "sample_meta.txt", by = 0.05, prefi
 
     clusterExport(cl, varlist = c("SEQ", "CPM", "parParseRaw"), envir = environment())
     options(scipen = 999)
+    res <- NULL
+    dat <- NULL
+
     res <- parLapply(
       cl, 1:ncol(CPM),
       function(x) parParseRaw(CPM[, x], SEQ)
     )
     stopCluster(cl)
     res <- Reduce("cbind", res)
-    # cat("\nCPM was parsed.\n")
+    cat("\nCPM was parsed.\n")
     colnames(res) <- colnames(CPM)
-
     dat <- data.frame(cutoff = SEQ, res, check.names = F)
+    if (is.null(res) || is.null(dat) ){
+        stop("\n Failed to parse raw read counts [ParseReadCounts]!\n\n")
+    }    
     kept <- rowSums(res) != ncol(res) # delete rows with all 1
     dat <- dat[kept, ]
     output <- paste0(prefix, "_parsedMatrix.txt")
@@ -421,7 +441,7 @@ ParseReadCounts <- function(data, metaFile = "sample_meta.txt", by = 0.05, prefi
 #' #     prefix="your/path/test_parsedMatrix.txt")
 #' # res <- CalculateSF (data=parsedDF,metaFile=metaFile,
 #' #     prefix="your/path/test")
-CalculateSF <- function(data, metaFile = "sample_meta.txt", prefix = "test", xMAX = NA) {
+CalculateSF <- function(data, metaFile = "sample_meta.txt", prefix = "test") {
   # calculate scaling factors
   options(stringsAsFactors = F)
   if (class(metaFile) == "character") { # given a filename, need to load it
@@ -444,9 +464,7 @@ CalculateSF <- function(data, metaFile = "sample_meta.txt", prefix = "test", xMA
   data <- data[, c(colnames(data)[1], kept)] # reorder and subset
 
   MAX_CPM <- max(data[, 1])
-  if (!is.na(xMAX)) {
-    MAX_CPM <- ifelse(xMAX < MAX_CPM, xMAX, MAX_CPM)
-  }
+
   #---------FUNCTION for quality control-------------------------------------
   QC <- function(data, cutoff_1stTurn = "auto", cutoff_QC = 1.2) {
     # cutoff_1stTurn: "auto"[default] or value between 0.1-0.8; 0.5 works well empirically
@@ -866,8 +884,8 @@ BoxplotSF <- function(input, prefix = "test") {
 ChIPseqSpikeInFree <- function(bamFiles, chromFile = "hg19",
                                metaFile = "sample_meta.txt",
                                prefix = "test", binSize = 1000,
-                               ncores = 2,
-                               xMAX = NA) {
+                               ncores = 2
+                               ) {
   # perform ChIP-seq spike-free normalization in one step
   if (binSize < 100 && binSize > 10000) {
     cat(paste0("\n**recommended binSize range 200~10000 (bp); your binSize is", binSize, " **\n"))
@@ -900,7 +918,7 @@ ChIPseqSpikeInFree <- function(bamFiles, chromFile = "hg19",
   }
   cat("\n\t[--done--]\n")
   cat("\nstep4. calculating scaling factors...")
-  result <- CalculateSF(data = parsedDF, metaFile = meta, prefix = prefix, xMAX = xMAX)
+  result <- CalculateSF(data = parsedDF, metaFile = meta, prefix = prefix)
   cat("\t[--done--]\n")
   cat("\nstep5. ploting scaling factors...")
   BoxplotSF(result, prefix)
