@@ -146,9 +146,9 @@ After you successfully run following `ChIPseqSpikeInFree` pipeline:
 Output will include: (in case that you set `prefix ="test"`)
 1. `test_SF.txt` - text result [Go to Interpretation section](#Interpretation-of-scaling-factor-table) or ([text file](docs/test_SF.txt))
     * tab-delimited text format, a table of calculated scaling factors by pipeline
-2. `test_distribution.pdf` - graphical result [Figure 1.A,B](#Graphical-results) or [PDF file](docs/test_distribution.pdf))
+2. `test_distribution.pdf` - graphical result (see [Figure 1.A,B](#Graphical-results) or [PDF file](docs/test_distribution.pdf))
     * view of proportion of reads below the given CPMW based on `test_parsedMatrix.txt`
-3. `test_boxplot.pdf` - graphical result  [Figure 1.C](#Graphical-results) or [PDF file](docs/test_boxplot.pdf)
+3. `test_boxplot.pdf` - graphical result  (see [Figure 1.C](#Graphical-results) or [PDF file](docs/test_boxplot.pdf))
     * view of scaling factors as boxplot based on `test_SF.txt`
 4. `test_rawCounts.txt` - intermediate file
     * tab-delimited text format, a table of raw read counts for each 1kb bin across genome
