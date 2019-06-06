@@ -144,17 +144,16 @@ After you successfully run following `ChIPseqSpikeInFree` pipeline:
 ```
 
 Output will include: (in case that you set `prefix ="test"`)
-1. `test_SF.txt` - text result [Go to Interpretation section](# Interpretation)
+1. `test_SF.txt` - text result [Go to Interpretation section](#Interpretation)
     * tab-delimited text format, a table of calculated scaling factors by pipeline
-2. `test_distribution.pdf` - graphical result [Figure 1.A,B](# Visualization) or [PDF file](docs/test_distribution.pdf))
+2. `test_distribution.pdf` - graphical result [Figure 1.A,B](#Graphical) or [PDF file](docs/test_distribution.pdf))
     * view of proportion of reads below the given CPMW based on `test_parsedMatrix.txt`
-3. `test_boxplot.pdf` - graphical result  [Figure 1.C](#Visualization) or [PDF file](docs/test_boxplot.pdf)
+3. `test_boxplot.pdf` - graphical result  [Figure 1.C](#Graphical) or [PDF file](docs/test_boxplot.pdf)
     * view of scaling factors as boxplot based on `test_SF.txt`
 4. `test_rawCounts.txt` - intermediate file
     * tab-delimited text format, a table of raw read counts for each 1kb bin across genome
 5. `test_parsedMatrix.txt` - intermediate file
     * tab-delimited text format, a table of proportion of reads below given cutoffs (CPMW)
-# Interpretation
 ### Interpretation of scaling factor table  ([text file](docs/test_SF.txt))
 
 |    ID                     | GROUP | ANTIBODY | COLOR | QC                                             | SF    |	TURNS                  |
@@ -168,7 +167,6 @@ Output will include: (in case that you set `prefix ="test"`)
 - **QC**: quality control testing. QC failure indicates poor or no enrichment. 
 - **SF**: scaling factor. Only sample that passes QC will be given a SF and **NA** indicates sample with poor enrichment. Input sample is not required for SF calculation. Larger scaling factor indicates a lower level of total histone mark and vice versa. For example, H3K27me3 is globally decreased in H3.3 K27M cells compared to WT  (**SF, 5.47 vs 1**). 
 - **TURNS**: the coordinates of two points [Xa, Ya, Xb, Yb] detected in cumulative distribution plot (proportion of reads below CPMW cutoffs) for slope-based SF calculation. 
-#Visualization
 ### Graphical results
 <img align="center" width="900" height="400" src="docs/H3K27me3_Fig1.jpg">
 
