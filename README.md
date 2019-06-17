@@ -41,12 +41,13 @@ Using `R`, enter:
 
 ```
 
-If you wish to build and install this package from source:
+Or using command lines
 
 ```bash
 $ git clone https://github.com/stjude/ChIPseqSpikeInFree.git
 $ R CMD build ChIPseqSpikeInFree
-$ R CMD install ChIPseqSpikeInFree
+$ R CMD INSTALL ChIPseqSpikeInFree_1.2.3.tar.gz
+
 ```
 
 ### Usage
