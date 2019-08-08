@@ -8,6 +8,10 @@ Traditional reads per million (RPM) normalization method is inappropriate for th
 
 We develop `ChIPseqSpikeInFree`, a novel ChIP-seq normalization method to effectively determine scaling factors for samples across various conditions and treatments, which does not rely on exogenous spike-in chromatin or peak detection to reveal global changes in histone modification occupancy. This method is capable of revealing the similar magnitude of global changes as the spike-in method.
 
+## App on DNAnexus Cloud platform - No installation, click and run.
+To use the tool, you will need to create a DNAnexus account at https://platform.dnanexus.com/register?client_id=sjcloudplatform.   After logging in DNAnexus,  you can create a project , upload your data to your project folder and choose the ChIPseqSpikeInFree app (Tools --> library --> search ChIPseqSpikeInFree) to run.  Or you can run ChIPseqSpikeInFree at https://platform.dnanexus.com/app/ChIPseqSpikeInFree and get results in an hour.
+
+
 ## Prerequisites
 
 `ChIPseqSpikeInFree` depends on `Rsamtools`, `GenomicRanges`, and `GenomicAlignments` to count reads from bam files.
