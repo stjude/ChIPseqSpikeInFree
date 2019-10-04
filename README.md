@@ -193,3 +193,10 @@ Users will still need to source and provide the following:
 * [Hongjian Jin]
 
 [Hongjian Jin]: https://github.com/hongjianjin
+
+## Hot to cite
+H Jin, LH Kasper, JD Larson, G Wu, SJ Baker, J Zhang, Y Fan*. (2019) ChIPseqSpikeInFree: A ChIP-seq normalization approach to reveal global changes in histone modifications without spike-in. [Bioinformatics]:https://doi.org/10.1093/bioinformatics/btz720
+
+## Contact
+ChIPseqSpikeInFree is developed by Drs. Hongjian Jin and Yiping Fan at the St Jude Children's Research Hospital. For collaborations or any other matters, contact: yiping.fanATstjude.org.
+
