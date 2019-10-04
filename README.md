@@ -120,7 +120,7 @@ User should follow ChIP-seq guidelines suggested by `ENCODE consortium(Landt, et
 	```
 
 ##### 2. chromFile: chromosome sizes of reference genome.
-`hg19`, `mm9`, `mm10`, `hg19` are included in the package.
+`hg19`, `mm9`, `mm10`, `hg38` are included in the package.
 
 For other genomes, you can either:
 
@@ -195,8 +195,8 @@ Users will still need to source and provide the following:
 [Hongjian Jin]: https://github.com/hongjianjin
 
 ## Hot to cite
-H Jin, LH Kasper, JD Larson, G Wu, SJ Baker, J Zhang, Y Fan*. (2019) ChIPseqSpikeInFree: A ChIP-seq normalization approach to reveal global changes in histone modifications without spike-in. [Bioinformatics]:https://doi.org/10.1093/bioinformatics/btz720
+H Jin, LH Kasper, JD Larson, G Wu, SJ Baker, J Zhang, Y Fan*. (2019) ChIPseqSpikeInFree: A ChIP-seq normalization approach to reveal global changes in histone modifications without spike-in. Bioinformatics, https://doi.org/10.1093/bioinformatics/btz720
 
 ## Contact
-ChIPseqSpikeInFree is developed by Drs. Hongjian Jin and Yiping Fan at the St Jude Children's Research Hospital. For collaborations or any other matters, contact: yiping.fanATstjude.org.
+ChIPseqSpikeInFree is developed by Drs. Hongjian Jin and Yiping Fan at the St Jude Children's Research Hospital. For collaborations or any other matters, please contact yiping.fanATstjude.org.
 
