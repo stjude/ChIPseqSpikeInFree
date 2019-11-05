@@ -200,3 +200,36 @@ H Jin, LH Kasper, JD Larson, G Wu, SJ Baker, J Zhang, Y Fan*. (2019) ChIPseqSpik
 ## Contact
 ChIPseqSpikeInFree is developed by Drs. Hongjian Jin and Yiping Fan at the St Jude Children's Research Hospital. For collaborations or any other matters, please contact yiping.fanATstjude.org.
 
+## R Session Info
+```R
+>sessionInfo()
+R version 3.6.1 (2019-07-05)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: Red Hat Enterprise Linux
+
+Matrix products: default
+BLAS:   /home/R/install/3.6.1/lib64/R/lib/libRblas.so
+LAPACK: /home/R/install/3.6.1/lib64/R/lib/libRlapack.so
+
+locale:
+[1] C
+
+attached base packages:
+[1] stats4    parallel  stats     graphics  grDevices utils     datasets
+[8] methods   base
+
+other attached packages:
+ [1] ChIPseqSpikeInFree_1.2.3    GenomicAlignments_1.20.1
+ [3] Rsamtools_2.0.3             Biostrings_2.52.0
+ [5] XVector_0.24.0              SummarizedExperiment_1.14.1
+ [7] DelayedArray_0.10.0         BiocParallel_1.18.1
+ [9] matrixStats_0.55.0          Biobase_2.44.0
+[11] GenomicRanges_1.36.1        GenomeInfoDb_1.20.0
+[13] IRanges_2.18.3              S4Vectors_0.22.1
+[15] BiocGenerics_0.30.0
+
+loaded via a namespace (and not attached):
+[1] lattice_0.20-38        bitops_1.0-6           grid_3.6.1
+[4] zlibbioc_1.30.0        Matrix_1.2-17          tools_3.6.1
+[7] RCurl_1.95-4.12        compiler_3.6.1         GenomeInfoDbData_1.2.1
+```
