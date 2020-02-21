@@ -182,33 +182,33 @@ Output will include: (in case that you set `prefix ="test"`)
 
 We can use SF to adjust original library size for differential analysis and generating bigwig files.    
 
-    1. for differential analysis 
-    ```R
-	 ...
-	 dat <- read.table("sample_SF.txt", sep="\t",header=TRUE,fill=TRUE,stringsAsFactors = FALSE, quote="",check.names=F)
-	 SF <- dat$SF
-         dge <- DGEList(counts = counts, group = GROUP, norm.factors = SF)
-	 ...
-    ```
-    2.  pseudo-code for generation of bigwig files from a bed file
-    ```bash
-	libSize=`cat sample1.bed|wc -l`
-	scale=15000000/($libSize*$SF)
-	genomeCoverageBed -bg -scale $scale -i sample1.bed  -g mm9.chromSizes > sample1.bedGraph
-	bedGraphToBigWig sample1.bedGraph mm9.chromSizes sample1.bw
-	```
+1. for differential analysis 
+```R
+...
+dat <- read.table("sample_SF.txt", sep="\t",header=TRUE,fill=TRUE,stringsAsFactors = FALSE, quote="",check.names=F)
+SF <- dat$SF
+dge <- DGEList(counts = counts, group = GROUP, norm.factors = SF)
+...
+```
+2.  pseudo-code for generation of bigwig files from a bed file
+```bash
+libSize=`cat sample1.bed|wc -l`
+scale=15000000/($libSize*$SF)
+genomeCoverageBed -bg -scale $scale -i sample1.bed  -g mm9.chromSizes > sample1.bedGraph
+bedGraphToBigWig sample1.bedGraph mm9.chromSizes sample1.bw
+```
 
 ## What happens if 100% complete loss is expected?
 
 In some scenario, a histone mark can be absent in a cell type at a certain developmental stage or in a model that the histone writer gene has been knocked-out. In this case,  you will see a "NA" in SF column and  "fail: complete loss, input or poor enrichment" in QC column in the output file ${prefix}_SF.txt. It's unreasonable to calculate SF for this kind of samples alone.  However, if you restore the histone mark by drug treatment or ectopic over-xpression of  histone writer,  you can have a valid SF.  Now you may want to compare "NA" with non-"NA" SF for a histone mark to show a global change in bigwig file or differential analysis.  Here is the pseudocode  to transform SF:
-    ```R
-	dat<-  read.table("sample_SF.txt", sep="\t",header=TRUE,fill=TRUE,stringsAsFactors = FALSE, quote="",check.names=F)
-	SF <- dat$SF
-	SF[is.na(SF)] <- 1
-	SF[!is.na(SF)]  <- 1/SF[!is.na(SF)]
-	dat$SF <- SF
-	write.table(dat, "sample_SF_completeLoss.txt", sep="\t",quote=F,row.names=F, col.names=T)
-    ```
+ ```R
+dat<-  read.table("sample_SF.txt", sep="\t",header=TRUE,fill=TRUE,stringsAsFactors = FALSE, quote="",check.names=F)
+SF <- dat$SF
+SF[is.na(SF)] <- 1
+SF[!is.na(SF)]  <- 1/SF[!is.na(SF)]
+dat$SF <- SF
+write.table(dat, "sample_SF_completeLoss.txt", sep="\t",quote=F,row.names=F, col.names=T)
+```
 
 ## Notes
 
