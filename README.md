@@ -8,6 +8,9 @@ Traditional reads per million (RPM) normalization method is inappropriate for th
 
 We develop `ChIPseqSpikeInFree`, a novel ChIP-seq normalization method to effectively determine scaling factors for samples across various conditions and treatments, which does not rely on exogenous spike-in chromatin or peak detection to reveal global changes in histone modification occupancy. This method is capable of revealing the similar magnitude of global changes as the spike-in method.
 
+In summary, `ChIPseqSpikeInFree` can estimate scaling factors for ChIP-seq samples without exogenous spike-in or without input. When ChIP-seq is done with spike-in protocol but high variation of Spike-In reads between samples are observed,  ChIPseqSpikeInFree can help you determine a more reliable scaling factor than ChIP-Rx method.
+
+
 ## App on DNAnexus Cloud platform - No installation, click and run.
 To use the tool, you will need to create a DNAnexus account at https://platform.dnanexus.com/register?client_id=sjcloudplatform.   After logging in DNAnexus,  you can create a project , upload your data to your project folder and choose the ChIPseqSpikeInFree app (Tools --> library --> search ChIPseqSpikeInFree) to run.  Or you can run ChIPseqSpikeInFree at https://platform.dnanexus.com/app/ChIPseqSpikeInFree and get results in an hour.
 
@@ -174,6 +177,38 @@ Output will include: (in case that you set `prefix ="test"`)
 - **TURNS**: the coordinates of two points [Xa, Ya, Xb, Yb] detected in cumulative distribution plot (proportion of reads below CPMW cutoffs) for slope-based SF calculation. 
 ### Graphical results
 <img align="center" width="900" height="400" src="docs/H3K27me3_Fig1.jpg">
+
+## How to use ChIPSeqSpikeIn scaling factor? 
+
+We can use SF to adjust original library size for differential analysis and generating bigwig files.    
+
+    1. for differential analysis 
+    ```R
+	 ...
+	 dat <- read.table("sample_SF.txt", sep="\t",header=TRUE,fill=TRUE,stringsAsFactors = FALSE, quote="",check.names=F)
+	 SF <- dat$SF
+         dge <- DGEList(counts = counts, group = GROUP, norm.factors = SF)
+	 ...
+    ```
+    2.  pseudo-code for generation of bigwig files from a bed file
+    ```bash
+	libSize=`cat sample1.bed|wc -l`
+	scale=15000000/($libSize*$SF)
+	genomeCoverageBed -bg -scale $scale -i sample1.bed  -g mm9.chromSizes > sample1.bedGraph
+	bedGraphToBigWig sample1.bedGraph mm9.chromSizes sample1.bw
+	```
+
+## What happens if 100% complete loss is expected?
+
+In some scenario, a histone mark can be absent in a cell type at a certain developmental stage or in a model that the histone writer gene has been knocked-out. In this case,  you will see a "NA" in SF column and  "fail: complete loss, input or poor enrichment" in QC column in the output file ${prefix}_SF.txt. It's unreasonable to calculate SF for this kind of samples alone.  However, if you restore the histone mark by drug treatment or ectopic over-xpression of  histone writer,  you can have a valid SF.  Now you may want to compare "NA" with non-"NA" SF for a histone mark to show a global change in bigwig file or differential analysis.  Here is the pseudocode  to transform SF:
+    ```R
+	dat<-  read.table("sample_SF.txt", sep="\t",header=TRUE,fill=TRUE,stringsAsFactors = FALSE, quote="",check.names=F)
+	SF <- dat$SF
+	SF[is.na(SF)] <- 1
+	SF[!is.na(SF)]  <- 1/SF[!is.na(SF)]
+	dat$SF <- SF
+	write.table(dat, "sample_SF_completeLoss.txt", sep="\t",quote=F,row.names=F, col.names=T)
+    ```
 
 ## Notes
 
