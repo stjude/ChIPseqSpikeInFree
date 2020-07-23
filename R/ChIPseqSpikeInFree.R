@@ -103,15 +103,15 @@ CountRawReads <- function(bamFiles, chromFile = "hg19", prefix = "test", singleE
   # return a logical vector
   ChrCheck <- function(bamFiles) {
     bamHeader <- scanBamHeader(bamFiles)
-    nameList <- unlist(
+    res <- unlist(
       lapply(
         1:length(bamHeader),
         function(x) {
-          names(bamHeader[[x]]$targets[1])
+          any( grepl ("chr", names(bamHeader[[x]]$targets)))
         }
       )
     )
-    grepl("chr", nameList)
+    res
   }
 
   # Function to count reads
