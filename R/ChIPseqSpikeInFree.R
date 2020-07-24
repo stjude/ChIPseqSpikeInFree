@@ -107,7 +107,7 @@ CountRawReads <- function(bamFiles, chromFile = "hg19", prefix = "test", singleE
       lapply(
         1:length(bamHeader),
         function(x) {
-          any( grepl ("chr", names(bamHeader[[x]]$targets)))
+          any( grepl ("^chr", names(bamHeader[[x]]$targets)))
         }
       )
     )
