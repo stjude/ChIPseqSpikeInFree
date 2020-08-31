@@ -476,7 +476,7 @@ CalculateSF <- function(data, metaFile = "sample_meta.txt",minFirstTurn = "auto"
   MAX_CPM <- max(data[, 1])
 
   #---------FUNCTION for quality control-------------------------------------
-  QC <- function(data, minFirstTurn = "auto", maxLastTurn=0.95,  cutoff_QC = 1.2) {
+  QC <- function(data, minFirstTurn = "auto", maxLastTurn=0.99,  cutoff_QC = 1.2) {
     # minFirstTurn: "auto"[default] or value between 0.1-0.8; 0.5 works well empirically
     # minLastTurn: "auto"[default] or value between 0.95 -0.99; 0.99 works well empirically
     # cutoff_QC: 1.2 detect 90% of input samples as QC failure [default]
@@ -513,11 +513,11 @@ CalculateSF <- function(data, metaFile = "sample_meta.txt",minFirstTurn = "auto"
         cpmw = as.numeric(names(dValues)[ind])
       )
     }
-    findLastTurn <- function(x, minDiff = 0.001, maxLastTurn=0.99) {
+    findLastTurn <- function(x, minDiff = 0.001, maxLastTurn4=0.99) {
       # determine the optimal last turning point from two methods
       x <- x[x > 0 & x < maxLastTurn]
-      res1 <- findLastTurnByPeak(x,maxLastTurn1=maxLastTurn)
-      res2 <- findLastTurnByCutoff(x,minDiff, maxLastTurn2=maxLastTurn)
+      res1 <- findLastTurnByPeak(x,maxLastTurn1=maxLastTurn4)
+      res2 <- findLastTurnByCutoff(x,minDiff, maxLastTurn2=maxLastTurn4)
       delta <- max(x) - res1$por
       # to deal with sample haveing bad enrichment and long tail of distribution
       if (delta < 0.01) {
@@ -525,13 +525,13 @@ CalculateSF <- function(data, metaFile = "sample_meta.txt",minFirstTurn = "auto"
       }
         return(res1)
     }
-    findFirstTurn <- function(x, cutoff = minFirstTurn, maxLastTurn=0.99) {
+    findFirstTurn <- function(x, cutoff = minFirstTurn, maxLastTurn3=0.99) {
       # define the first turning point before the highest peak
       # x must be a vector with names
       # cutoff: "auto" or value between 0.1-0.8
       # por : proportion of reads
       if (tolower(as.character(cutoff)) == "auto") {
-        x <- x[x > 0 & x < maxLastTurn]
+        x <- x[x > 0 & x < maxLastTurn3
         d1 <- density(x)
         Xpeak <- d1$x[which.max(d1$y)]
         d2 <- density(d1$x[d1$x < Xpeak])
@@ -546,13 +546,13 @@ CalculateSF <- function(data, metaFile = "sample_meta.txt",minFirstTurn = "auto"
       }
       list(por = round(por, 4), cpmw = cpmw)
     }
-    fracReads <- maxLastTurn
-    QC.list <- apply(data[, 2:ncol(data)], 2, FUN = function(x, cutoff = cutoff_QC) {
+    fracReads <- maxLastTurn3
+    QC.list <- apply(data[, 2:ncol(data)], 2, FUN = function(x, cutoffQC = cutoff_QC) {
       names(x) <- data[, 1]
       # find last turning point
-      turnLast <- findLastTurn(x, minDiff = 0.001, maxLastTurn=fracReads)
-      turnFirst <- findFirstTurn(x, cutoff = minFirstTurn, maxLastTurn=fracReads)
-      if (max(turnLast$cpmw) >= cutoff) {
+      turnLast <- findLastTurn(x, minDiff = 0.001, maxLastTurn4=fracReads)
+      turnFirst <- findFirstTurn(x, cutoff = minFirstTurn, maxLastTurn3=fracReads)
+      if (turnLast$cpmw >= cutoffQC) {
         QCstr <- "pass"
       } else {
         QCstr <- "fail: complete loss, input or poor enrichment"
