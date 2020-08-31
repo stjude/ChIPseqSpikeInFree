@@ -531,7 +531,7 @@ CalculateSF <- function(data, metaFile = "sample_meta.txt",minFirstTurn = "auto"
       # cutoff: "auto" or value between 0.1-0.8
       # por : proportion of reads
       if (tolower(as.character(cutoff)) == "auto") {
-        x <- x[x > 0 & x < maxLastTurn3
+        x <- x[x > 0 & x < maxLastTurn3]
         d1 <- density(x)
         Xpeak <- d1$x[which.max(d1$y)]
         d2 <- density(d1$x[d1$x < Xpeak])
