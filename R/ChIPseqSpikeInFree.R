@@ -546,12 +546,11 @@ CalculateSF <- function(data, metaFile = "sample_meta.txt",minFirstTurn = "auto"
       }
       list(por = round(por, 4), cpmw = cpmw)
     }
-    fracReads <- maxLastTurn3
     QC.list <- apply(data[, 2:ncol(data)], 2, FUN = function(x, cutoffQC = cutoff_QC) {
       names(x) <- data[, 1]
       # find last turning point
-      turnLast <- findLastTurn(x, minDiff = 0.001, maxLastTurn4=fracReads)
-      turnFirst <- findFirstTurn(x, cutoff = minFirstTurn, maxLastTurn3=fracReads)
+      turnLast <- findLastTurn(x, minDiff = 0.001, maxLastTurn4=maxLastTurn)
+      turnFirst <- findFirstTurn(x, cutoff = minFirstTurn, maxLastTurn3=maxLastTurn)
       if (turnLast$cpmw >= cutoffQC) {
         QCstr <- "pass"
       } else {
