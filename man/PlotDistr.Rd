@@ -35,7 +35,7 @@ This function generates CPMW distribtion curve and barplot using sacaling factor
 
 ## use custom setting for H3K9me3
 # SF <- CalculateSF(data = parsedDF, metaFile = metaFile, 
-#     maxLastTurn=0.95, cutoff_QC=1)  
+#     maxLastTurn=0.97, cutoff_QC=1)  
 # PlotDistr (data=parsedDF,SF=SF, prefix="your/path/test_manual_cutoff", xlimMaxCPMW=NULL)
 
 ## zoom out distribution curve

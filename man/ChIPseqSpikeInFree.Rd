@@ -59,5 +59,5 @@ The correct way is to combine bamFiles parameter and create a new metadata file 
 ## 4. run ChIPseqSpikeInFree pipeline with custom arguments for H3K9me3 with unideal enrichment
 # ChIPseqSpikeInFree(bamFiles=bams, chromFile="mm9",
 #    metaFile=metaFile,prefix="test_manual_cutoffs",
-#    cutoff_QC = 1, maxLastTurn=0.95)
+#    cutoff_QC = 1, maxLastTurn=0.97)
 }

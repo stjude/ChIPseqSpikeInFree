@@ -92,7 +92,7 @@ Save as `/your/path/sample_meta.txt` ([Example](docs/sample_meta.txt))
 ##### 4. Run `ChIPseqSpikeInFree` pipeline with custom settings for ChIP-seq with unideal enrichment or many very broad enriched regions like H3K9me3
 
 ```R
-> ChIPseqSpikeInFree(bamFiles = bams, chromFile = "hg19", metaFile = metaFile, prefix = "test", cutoff_QC = 1, maxLastTurn=0.95)
+> ChIPseqSpikeInFree(bamFiles = bams, chromFile = "hg19", metaFile = metaFile, prefix = "test", cutoff_QC = 1, maxLastTurn=0.97)
 ```
 
 ### Input

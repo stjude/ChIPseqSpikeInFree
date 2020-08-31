@@ -441,8 +441,8 @@ ParseReadCounts <- function(data, metaFile = "sample_meta.txt", by = 0.05, prefi
 #' # quote="",row.names=NULL ,check.names=F)
 #' # SF <- CalculateSF (data=parsedDF,metaFile=metaFile)
 #' ## For some ChIP with unideal enrichment like H3K9me3, you may try loose cutoff (1) 
-#' ## but use 95% of total reads to improve performance.
-#' # SF <- CalculateSF(data, metaFile = metaFile, maxLastTurn=0.95, cutoff_QC=1)
+#' ## but use 97% of total reads to improve performance.
+#' # SF <- CalculateSF(data, metaFile = metaFile, maxLastTurn=0.97, cutoff_QC=1)
 #' 
 #' ## 2. start from a rawCount file
 #' 
@@ -604,7 +604,7 @@ CalculateSF <- function(data, metaFile = "sample_meta.txt",minFirstTurn = "auto"
 #' 
 #' ## use custom setting for H3K9me3
 #' # SF <- CalculateSF(data = parsedDF, metaFile = metaFile, 
-#' #     maxLastTurn=0.95, cutoff_QC=1)  
+#' #     maxLastTurn=0.97, cutoff_QC=1)  
 #' # PlotDistr (data=parsedDF,SF=SF, prefix="your/path/test_manual_cutoff", xlimMaxCPMW=NULL)
 #' 
 #' ## zoom out distribution curve
@@ -955,7 +955,7 @@ BoxplotSF <- function(input, prefix = "test") {
 #' ## 4. run ChIPseqSpikeInFree pipeline with custom arguments for H3K9me3 with unideal enrichment
 #' # ChIPseqSpikeInFree(bamFiles=bams, chromFile="mm9",
 #' #    metaFile=metaFile,prefix="test_manual_cutoffs",
-#' #    cutoff_QC = 1, maxLastTurn=0.95)
+#' #    cutoff_QC = 1, maxLastTurn=0.97)
 ChIPseqSpikeInFree <- function(bamFiles, chromFile = "hg19",
                                metaFile = "sample_meta.txt",
                                prefix = "test", binSize = 1000,

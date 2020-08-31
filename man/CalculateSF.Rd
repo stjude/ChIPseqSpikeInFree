@@ -41,8 +41,8 @@ The correct way is to combine bamFiles parameter and create a new metadata file 
 # quote="",row.names=NULL ,check.names=F)
 # SF <- CalculateSF (data=parsedDF,metaFile=metaFile)
 ## For some ChIP with unideal enrichment like H3K9me3, you may try loose cutoff (1) 
-## but use 95\% of total reads to improve performance.
-# SF <- CalculateSF(data, metaFile = metaFile, maxLastTurn=0.95, cutoff_QC=1)
+## but use 97\% of total reads to improve performance.
+# SF <- CalculateSF(data, metaFile = metaFile, maxLastTurn=0.97, cutoff_QC=1)
 
 ## 2. start from a rawCount file
 
