@@ -4,8 +4,14 @@
 \alias{ParseReadCounts}
 \title{parse readCounts matrix}
 \usage{
-ParseReadCounts(data, metaFile = "sample_meta.txt", by = 0.05,
-  prefix = "test")
+ParseReadCounts(
+  data,
+  metaFile = "sample_meta.txt",
+  by = 0.05,
+  prefix = "test",
+  binSize = 1000,
+  ncores = 2
+)
 }
 \arguments{
 \item{data}{a data.frame returned by readRawCounts() or a file name of rawCount table}
@@ -15,6 +21,10 @@ ParseReadCounts(data, metaFile = "sample_meta.txt", by = 0.05,
 \item{by}{step used to define cutoffs; ParseReadCounts will cumulatively calculate the percent of reads that pass the every cutoff.}
 
 \item{prefix}{prefix of output filename to save the parsedMatrix of (cutoff, and percent of reads accumulatively passed the cutoff in each sample).}
+
+\item{binSize}{size of bins (bp). Recommend a value bwteen 200 and 10000}
+
+\item{ncores}{number of cores for parallel computing.}
 }
 \value{
 A data.frame of parsed data.

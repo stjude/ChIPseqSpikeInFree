@@ -4,8 +4,16 @@
 \alias{ChIPseqSpikeInFree}
 \title{wrapper function - perform ChIP-seq spike-free normalization in one step.}
 \usage{
-ChIPseqSpikeInFree(bamFiles, chromFile = "hg19",
-  metaFile = "sample_meta.txt", prefix = "test")
+ChIPseqSpikeInFree(
+  bamFiles,
+  chromFile = "hg19",
+  metaFile = "sample_meta.txt",
+  prefix = "test",
+  binSize = 1000,
+  cutoff_QC = 1.2,
+  maxLastTurn = 0.99,
+  ncores = 2
+)
 }
 \arguments{
 \item{bamFiles}{a vector of bam filenames.}
@@ -15,6 +23,14 @@ ChIPseqSpikeInFree(bamFiles, chromFile = "hg19",
 \item{metaFile}{a filename of metadata file. the file must have three columns: ID (bam filename without full path), ANTIBODY and GROUP}
 
 \item{prefix}{prefix of output filename.}
+
+\item{binSize}{size of bins (bp). Recommend a value bwteen 200 and 10000}
+
+\item{cutoff_QC}{a numeric value [between 0.95 and 1.20] to identiy sample of QC failure or poor enrichment [1.2 by default]. Slightly smaller cutoff_QC value (like 1) may imporve result when the enrichment is not ideal.}
+
+\item{maxLastTurn}{a numeric value [between 0.95 and 0.99] to define maximum fraction of reads to be included for identifying last turning point [0.99 by default]. Slightly smaller maxLastTurn value may imporve result when the enrichment is not ideal.}
+
+\item{ncores}{number of cores for parallel computing.}
 }
 \value{
 A data.frame of the updated metaFile with scaling factor
@@ -39,4 +55,9 @@ The correct way is to combine bamFiles parameter and create a new metadata file 
 
 ## 3. run ChIPseqSpikeInFree pipeline
 # ChIPseqSpikeInFree(bamFiles=bams, chromFile="mm9",metaFile=metaFile,prefix="test")
+
+## 4. run ChIPseqSpikeInFree pipeline with custom arguments for H3K9me3 with unideal enrichment
+# ChIPseqSpikeInFree(bamFiles=bams, chromFile="mm9",
+#    metaFile=metaFile,prefix="test_manual_cutoffs",
+#    cutoff_QC = 1, maxLastTurn=0.95)
 }

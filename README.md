@@ -6,28 +6,20 @@ A Spike-in Free ChIP-Seq Normalization Approach for Detecting Global Changes in 
 
 Traditional reads per million (RPM) normalization method is inappropriate for the evaluation of ChIP-seq data when the treatment or mutation has the global effect. Changes in global levels of histone modifications can be detected by using exogenous reference spike-in controls. However, most of the ChIP-seq studies have overlooked the normalization problem that have to be corrected with spike-in. A method that retrospectively renormalize data sets without spike-in is lacking. 
 
-We develop `ChIPseqSpikeInFree`, a novel ChIP-seq normalization method to effectively determine scaling factors for samples across various conditions and treatments, which does not rely on exogenous spike-in chromatin or peak detection to reveal global changes in histone modification occupancy. This method is capable of revealing the similar magnitude of global changes as the spike-in method.
+We observed that some highly enriched regions were retained despite global changes by oncogenic mutations or drug treatment and that the proportion of reads within these regions was inversely associated with total histone mark levels. Therefore, we developped `ChIPseqSpikeInFree`, a novel ChIP-seq normalization method to effectively determine scaling factors for samples across various conditions and treatments, which does not rely on exogenous spike-in chromatin or peak detection to reveal global changes in histone modification occupancy. This method is capable of revealing the similar magnitude of global changes as the spike-in method.
 
-In summary, `ChIPseqSpikeInFree` can estimate scaling factors for ChIP-seq samples without exogenous spike-in or without input. When ChIP-seq is done with spike-in protocol but high variation of Spike-In reads between samples are observed,  ChIPseqSpikeInFree can help you determine a more reliable scaling factor than ChIP-Rx method.
+In summary, `ChIPseqSpikeInFree` can estimate scaling factors for ChIP-seq samples without exogenous spike-in or without input. When ChIP-seq is done with spike-in protocol but high variation of Spike-In reads between samples are observed,  ChIPseqSpikeInFree can help you determine a more reliable scaling factor than ChIP-Rx method. It's not recommended to run ChIPseqSpikeInFree blindly without any biological evidences like Western Blotting to prove the global change at protein level between your control and treatment samples. 
 
 
 ## App on DNAnexus Cloud platform - No installation, click and run.
-To use the tool, you will need to create a DNAnexus account at https://platform.dnanexus.com/register?client_id=sjcloudplatform.   After logging in DNAnexus,  you can create a project , upload your data to your project folder and choose the ChIPseqSpikeInFree app (Tools --> library --> search ChIPseqSpikeInFree) to run.  Or you can run ChIPseqSpikeInFree at https://platform.dnanexus.com/app/ChIPseqSpikeInFree and get results in an hour.
+To use the tool, you will need to create a DNAnexus account at https://platform.dnanexus.com/register?client_id=sjcloudplatform.   After logging in DNAnexus,  you can create a project , upload your data to your project folder and choose the ChIPseqSpikeInFree app (Tools --> library --> search ChIPseqSpikeInFree) to run.  Or you can run ChIPseqSpikeInFree [v1.2.3] at https://platform.dnanexus.com/app/ChIPseqSpikeInFree and get results in an hour.
 
 
 ## Prerequisites
 
 `ChIPseqSpikeInFree` depends on `Rsamtools`, `GenomicRanges`, and `GenomicAlignments` to count reads from bam files.
 
-To install these packages, start `R` (version "3.4") and enter:
-```R
-> source("https://bioconductor.org/biocLite.R")
-> biocLite("Rsamtools")
-> biocLite("GenomicRanges")
-> biocLite("GenomicAlignments")
-```
-
-If you use `R` (version "3.5"), enter:
+To install these packages, start `R` (version "3.5")or above, enter:
 ```R
 > if (!requireNamespace("BiocManager", quietly = TRUE))
 >     install.packages("BiocManager")
@@ -45,7 +37,8 @@ Using `R`, enter:
 > install.packages("devtools")
 > library(devtools)
 > install_github("stjude/ChIPseqSpikeInFree")
-
+> packageVersion('ChIPseqSpikeInFree')
+#[1] '1.2.4'
 ```
 
 Or using command lines
@@ -53,7 +46,7 @@ Or using command lines
 ```bash
 $ git clone https://github.com/stjude/ChIPseqSpikeInFree.git
 $ R CMD build ChIPseqSpikeInFree
-$ R CMD INSTALL ChIPseqSpikeInFree_1.2.3.tar.gz
+$ R CMD INSTALL ChIPseqSpikeInFree_1.2.4.tar.gz
 
 ```
 
@@ -94,6 +87,12 @@ Save as `/your/path/sample_meta.txt` ([Example](docs/sample_meta.txt))
 
 ```R
 > ChIPseqSpikeInFree(bamFiles = bams, chromFile = "hg19", metaFile = metaFile, prefix = "test")
+```
+
+##### 4. Run `ChIPseqSpikeInFree` pipeline with custom settings for ChIP-seq with unideal enrichment or many very broad enriched regions like H3K9me3
+
+```R
+> ChIPseqSpikeInFree(bamFiles = bams, chromFile = "hg19", metaFile = metaFile, prefix = "test", cutoff_QC = 1, maxLastTurn=0.95)
 ```
 
 ### Input
@@ -182,7 +181,7 @@ Output will include: (in case that you set `prefix ="test"`)
 
 We can use SF to adjust original library size for differential analysis and generating bigwig files.    
 
-1. for differential analysis 
+1. for differential analysis with EdgeR
 ```R
 ...
 dat <- read.table("sample_SF.txt", sep="\t",header=TRUE,fill=TRUE,stringsAsFactors = FALSE, quote="",check.names=F)
@@ -190,7 +189,24 @@ SF <- dat$SF
 dge <- DGEList(counts = counts, group = GROUP, norm.factors = SF)
 ...
 ```
-2.  pseudo-code for generation of bigwig files from a bed file
+2. for differential analysis with DESeq2
+```R
+...
+dat <- read.table("sample_SF.txt", sep="\t",header=TRUE,fill=TRUE,stringsAsFactors = FALSE, quote="",check.names=F)
+SF <- dat$SF
+countData <- matrix(1:100,ncol=4)
+condition <- factor(c("A","A","B","B"))
+dds <- DESeqDataSetFromMatrix(countData, DataFrame(condition), ~ condition)
+dds <- estimateSizeFactors(dds)
+coldata<- colData(dds)
+coldata$sizeFactor <- coldata$sizeFactor *SF
+colData(dds) <- coldata
+dds <- estimateDispersions(dds)
+dds <- nbinomWaldTest(dds)
+...
+```
+
+3.  pseudo-code for generation of bigwig files from a bed file
 ```bash
 libSize=`cat sample1.bed|wc -l`
 scale=15000000/($libSize*$SF)
@@ -214,7 +230,7 @@ write.table(dat, "sample_SF_completeLoss.txt", sep="\t",quote=F,row.names=F, col
 
 This repository contains the following:
 - source code
-- documentation [[PDF file](docs/ChIPseqSpikeInFree_1.2.2.pdf)]
+- documentation [[PDF file](docs/ChIPseqSpikeInFree_1.2.4.pdf)]
 - chromFile of human and mouse reference genome (`hg19`, `mm9`, `mm10`, and `hg38`)
 - an example of `sample_meta.txt`
 
@@ -254,7 +270,7 @@ attached base packages:
 [8] methods   base
 
 other attached packages:
- [1] ChIPseqSpikeInFree_1.2.3    GenomicAlignments_1.20.1
+ [1] ChIPseqSpikeInFree_1.2.4    GenomicAlignments_1.20.1
  [3] Rsamtools_2.0.3             Biostrings_2.52.0
  [5] XVector_0.24.0              SummarizedExperiment_1.14.1
  [7] DelayedArray_0.10.0         BiocParallel_1.18.1

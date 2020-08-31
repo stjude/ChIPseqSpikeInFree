@@ -25,7 +25,7 @@ Given a chrom.size file, this function allows you to generate a your own sliding
 ## 1. generate a mm10 binFile without chr and use a binSize of 1000 bp
 ## and overlap of 500 bp between two consecutive bins
 
-## "mm10" will be parsed as system.file("extdata", "mm10.chrom.sizes", 
+## "mm10" will be parsed as system.file("extdata", "mm10.chrom.sizes",
 ##       package = "ChIPseqSpikeInFree")
 # binDF <- GenerateBins(chromFile="mm10",binSize=1000, overlap=500,
 # withChr=FALSE,prefix="mm10")

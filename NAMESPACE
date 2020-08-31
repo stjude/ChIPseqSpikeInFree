@@ -2,6 +2,7 @@
 
 export(BoxplotSF)
 export(CalculateSF)
+export(PlotDistr)
 export(ChIPseqSpikeInFree)
 export(CountRawReads)
 export(GenerateBins)
