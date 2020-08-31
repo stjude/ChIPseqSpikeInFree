@@ -530,7 +530,7 @@ CalculateSF <- function(data, metaFile = "sample_meta.txt",minFirstTurn = "auto"
       # x must be a vector with names
       # cutoff: "auto" or value between 0.1-0.8
       # por : proportion of reads
-      if (tolower(cutoff) == "auto") {
+      if (tolower(as.character(cutoff)) == "auto") {
         x <- x[x > 0 & x < maxLastTurn]
         d1 <- density(x)
         Xpeak <- d1$x[which.max(d1$y)]
@@ -672,7 +672,7 @@ PlotDistr<-function(data, SF="test_SF.txt", prefix="test", xlimMaxCPMW=NULL)
         par(mar = c(10, 6, 6, 2))
         #-----------------------------------------------------
         #-------------plot1: curves--------------------------
-        if (is.null(xlimMaxCPMW) | xlimMaxCPMW == 'auto'){  
+        if (is.null(xlimMaxCPMW)){  
            Xbs <- strsplit(meta$TURNS,",")
            MAX_CPMW <- max(as.numeric(unlist(lapply(Xbs,'[',3) ))) + 10
         }else{
