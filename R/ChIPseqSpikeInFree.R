@@ -523,7 +523,7 @@ CalculateSF <- function(data, metaFile = "sample_meta.txt",minFirstTurn = "auto"
       if (delta < 0.01) {
         return(res2)
       }
-      return(res1)
+        return(res1)
     }
     findFirstTurn <- function(x, cutoff = minFirstTurn, maxLastTurn=0.99) {
       # define the first turning point before the highest peak
@@ -547,13 +547,12 @@ CalculateSF <- function(data, metaFile = "sample_meta.txt",minFirstTurn = "auto"
       list(por = round(por, 4), cpmw = cpmw)
     }
 
-    QC.list <- apply(data[, 2:ncol(data)], 2, FUN = function(x, cutoff = cutoff_QC) {
+    QC.list <- apply(data[, 2:ncol(data)], 2, FUN = function(x, cutoff = cutoff_QC, maxLastTurn=maxLastTurn) {
       names(x) <- data[, 1]
       # find last turning point
-      maxLastTurn =0.95
       turnLast <- findLastTurn(x, minDiff = 0.001, maxLastTurn)
-      turnFirst <- findFirstTurn(x, cutoff = minFirstTurn, maxLastTurn)
-      if (turnLast$cpmw >= cutoff) {
+      turnFirst <- findFirstTurn(x, cutoff = minFirstTurn, maxLastTurn=maxLastTurn)
+      if (max(turnLast$cpmw) >= cutoff) {
         QCstr <- "pass"
       } else {
         QCstr <- "fail: complete loss, input or poor enrichment"
