@@ -552,7 +552,7 @@ CalculateSF <- function(data, metaFile = "sample_meta.txt",minFirstTurn = "auto"
       # find last turning point
       maxLastTurn =0.95
       turnLast <- findLastTurn(x, minDiff = 0.001, maxLastTurn)
-      turnFirst <- findFirstTurn(x, cutoff = cutoff_QC, maxLastTurn)
+      turnFirst <- findFirstTurn(x, cutoff = minFirstTurn, maxLastTurn)
       if (turnLast$cpmw >= cutoff) {
         QCstr <- "pass"
       } else {
