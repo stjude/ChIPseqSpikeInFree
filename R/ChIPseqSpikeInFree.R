@@ -996,7 +996,7 @@ ChIPseqSpikeInFree <- function(bamFiles, chromFile = "hg19",
   cat("\nstep4. calculating scaling factors...")
   SF <- CalculateSF(data = parsedDF, metaFile = meta, minFirstTurn = "auto", maxLastTurn=maxLastTurn, cutoff_QC=cutoff_QC)
   cat("\nstep5. ploting distribution curves and bars ...")
-  PlotDistr(parsedDF, SF, prefix, xlimMaxCPMW="auto" )
+  PlotDistr(parsedDF, SF, prefix, xlimMaxCPMW=NULL )
   cat("\t[--done--]\n")
   cat("\nstep6. ploting scaling factors...")
   BoxplotSF(SF, prefix)
