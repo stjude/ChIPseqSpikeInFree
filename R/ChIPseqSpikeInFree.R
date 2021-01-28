@@ -1001,5 +1001,5 @@ ChIPseqSpikeInFree <- function(bamFiles, chromFile = "hg19",
   cat("\nstep6. ploting scaling factors...")
   BoxplotSF(SF, prefix)
   cat("\n\t[--done--]\n")
-  invisible(result)
+  # invisible(result)
 }
