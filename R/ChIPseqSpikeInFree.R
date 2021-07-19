@@ -674,7 +674,7 @@ PlotDistr<-function(data, SF="test_SF.txt", prefix="test", xlimMaxCPMW=NULL)
            Xbs <- strsplit(meta$TURNS,",")
            MAX_CPMW <- max(as.numeric(unlist(lapply(Xbs,'[',3) ))) + 10
         }else{
-           MAX_CPMW <- min(max(x), xlimMaxCPMW)
+           MAX_CPMW <- min(max(x), xlimMaxCPMW, 80)
         }
         if (ncol(subsetByAb) == 1) {
           totalPages <- 1

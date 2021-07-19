@@ -174,6 +174,11 @@ Output will include: (in case that you set `prefix ="test"`)
 - **QC**: quality control testing. QC failure indicates poor or no enrichment. 
 - **SF**: scaling factor. Only sample that passes QC will be given a SF and **NA** indicates sample with poor enrichment. Input sample is not required for SF calculation. Larger scaling factor indicates a lower level of total histone mark and vice versa. For example, H3K27me3 is globally decreased in H3.3 K27M cells compared to WT  (**SF, 5.47 vs 1**). 
 - **TURNS**: the coordinates of two points [Xa, Ya, Xb, Yb] detected in cumulative distribution plot (proportion of reads below CPMW cutoffs) for slope-based SF calculation. 
+
+### How is scaling factor calculated?  
+Given a set of n samples immunoprecipitated with the same antibody, we chose one sample as a reference βr. We derived the scaling factor (S) for any other sample i as Si=βr/βi where βi is the slope of sample i.  Since the scaling factor of one specific sample is relative to the reference sample, the value could be changed based on set of samples included in the analysis. The recommended comparison would be of individual samples between different GROUPs but with same ANTIBODY. 
+
+
 ### Graphical results
 <img align="center" width="900" height="400" src="docs/H3K27me3_Fig1.jpg">
 
