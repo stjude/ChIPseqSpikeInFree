@@ -6,6 +6,7 @@
 #' @param binSize size of bins (bp)
 #' @param overlap overlaps between two consecutive bins (bp)
 #' @param withChr chromosome names in bin File have chr if set withChr to TRUE; FALSE - no chr
+#' @param minChrSize exclude small contigs (bp) . when it is NULL (by default), minChrSize equals binSize x 2 (bp).
 #' @return A data.frame of generated bins
 #' @export
 #' @examples
@@ -22,8 +23,9 @@
 #' ## "hg19" will be parsed as system.file("extdata", "hg19.chrom.sizes",
 #' ##       package = "ChIPseqSpikeInFree")
 #' # binDF<- GenerateBins(chromFile="hg19",binSize=2000, overlap=0,
-#' # withChr=TRUE,prefix="hg19")
-GenerateBins <- function(chromFile, binSize = 1000, overlap = 0, withChr = TRUE) {
+#' # withChr=TRUE,minChrSize=2000)
+
+GenerateBins <- function(chromFile, binSize = 1000, overlap = 0, withChr = TRUE, minChrSize=NULL) {
   # generate genome-wide bins for counting purpose
 
   options(stringsAsFactors = FALSE)
@@ -49,13 +51,25 @@ GenerateBins <- function(chromFile, binSize = 1000, overlap = 0, withChr = TRUE)
     chrNotation <- gsub("chrMT", "chrM", chrNotation)
   }
   chromSize[, 1] <- chrNotation
+  cat(paste0("\n\twarn: exclude small contigs [n=", sum(chromSize[,2] < minChrSize),"]"))
+  if (is.null(minChrSize)){
+	minChrSize <- binSize * 2
+  }
+  chromSize <- chromSize[chromSize[,2] >= minChrSize,]
   beds <- NULL
+  timeStamp<- strtrim(gsub("[-: ]","",Sys.time()),14) #8,12
+  outFile <- paste0(timeStamp,".txt")
+  cat("\n\tstart:",as.character(Sys.time()),"\n\t")
   for (r in 1:nrow(chromSize)) {
     chrName <- chromSize[r, 1]
     chrLength <- chromSize[r, 2]
     realBinSize <- binSize - overlap
     starts <- seq(0, chrLength, realBinSize) + 1
-    ends <- c(seq(binSize, chrLength, realBinSize), chrLength)
+    if (chrLength < realBinSize){
+        ends <- chrLength
+    }else{
+        ends <- c(seq(binSize, chrLength, realBinSize), chrLength)
+    }
     starts <- starts[1:length(ends)]
     bed <- data.frame(chr = chrName, start = starts, end = ends)
     counter <- c(counter, nrow(bed))
@@ -930,8 +944,11 @@ BoxplotSF <- function(input, prefix = "test") {
 #' @param chromFile chrom.size file. Given "hg19","mm10","mm9" or "hg38", will load chrom.size file from package folder.
 #' @param metaFile a filename of metadata file. the file must have three columns: ID (bam filename without full path), ANTIBODY and GROUP
 #' @param binSize size of bins (bp). Recommend a value bwteen 200 and 10000
+#' @param minFirstTurn  a numeric value [between 0.3 and 0.8] to define minimum fraction of reads to be ignored as background[ 0.5 by default]. Or character "auto" to allow automatic selction of value.
 #' @param maxLastTurn  a numeric value [between 0.95 and 0.99] to define maximum fraction of reads to be included for identifying last turning point [0.99 by default]. Slightly smaller maxLastTurn value may imporve result when the enrichment is not ideal.
+#' @param singleEnd a logical value to define where your reads are single-end [TRUE by default] or FALSE [paired-end].
 #' @param cutoff_QC  a numeric value [between 0.95 and 1.20] to identiy sample of QC failure or poor enrichment [1.2 by default]. Slightly smaller cutoff_QC value (like 1) may imporve result when the enrichment is not ideal. 
+#' @param disableOverwritten a logical value to define whether to overwrite previous counting matrix & parsed matrix [FALSE by default]. 
 #' @param ncores number of cores for parallel computing.
 #' @param prefix prefix of output filename.
 #' @return A data.frame of the updated metaFile with scaling factor
@@ -956,10 +973,16 @@ BoxplotSF <- function(input, prefix = "test") {
 #' # ChIPseqSpikeInFree(bamFiles=bams, chromFile="mm9",
 #' #    metaFile=metaFile,prefix="test_manual_cutoffs",
 #' #    cutoff_QC = 1, maxLastTurn=0.97)
-ChIPseqSpikeInFree <- function(bamFiles, chromFile = "hg19",
+ChIPseqSpikeInFree <- function(bamFiles, 
+                               chromFile = "hg19",
                                metaFile = "sample_meta.txt",
-                               prefix = "test", binSize = 1000,
-                               cutoff_QC = 1.2, maxLastTurn=0.99,
+                               prefix = "test",
+                               binSize = 1000,
+                               cutoff_QC = 1.2, 
+                               minFirstTurn = 0.5,
+                               maxLastTurn = 0.99,
+                               singleEnd = TRUE,
+                               disableOverwritten = TRUE,
                                ncores = 2
                                ) {
   # perform ChIP-seq spike-free normalization in one step
@@ -971,14 +994,14 @@ ChIPseqSpikeInFree <- function(bamFiles, chromFile = "hg19",
   cat("\n\t[--done--]\n")
   cat("\nstep2. counting reads...")
   output1 <- paste0(prefix, "_rawCounts.txt")
-  disableOverwritten <- TRUE
+
 
   # in case of downstream errors, just load existing outFile to avoid re-counting
   if (file.exists(output1) && disableOverwritten) {
     cat("\n\t", output1, "[just loading the existing file; delete this file first to do re-counting ]")
     rawCountDF <- read.table(output1, sep = "\t", header = TRUE, fill = TRUE, stringsAsFactors = FALSE, quote = "", row.names = 1, check.names = F)
   } else {
-    rawCountDF <- CountRawReads(bamFiles = bamFiles, chromFile = chromFile, prefix = prefix, binSize = binSize)
+    rawCountDF <- CountRawReads(bamFiles = bamFiles, chromFile = chromFile, prefix = prefix, binSize = binSize,  singleEnd = singleEnd)
   }
   cat("\n\t[--done--]\n")
   cat("\nstep3. parsing raw counts...")
@@ -994,12 +1017,11 @@ ChIPseqSpikeInFree <- function(bamFiles, chromFile = "hg19",
   }
   cat("\n\t[--done--]\n")
   cat("\nstep4. calculating scaling factors...")
-  SF <- CalculateSF(data = parsedDF, metaFile = meta, minFirstTurn = "auto", maxLastTurn=maxLastTurn, cutoff_QC=cutoff_QC)
+  SF <- CalculateSF(data = parsedDF, metaFile = meta, minFirstTurn = minFirstTurn, maxLastTurn=maxLastTurn, cutoff_QC=cutoff_QC)
   cat("\nstep5. ploting distribution curves and bars ...")
   PlotDistr(parsedDF, SF, prefix, xlimMaxCPMW=NULL )
   cat("\t[--done--]\n")
   cat("\nstep6. ploting scaling factors...")
   BoxplotSF(SF, prefix)
   cat("\n\t[--done--]\n")
-  invisible(result)
 }
