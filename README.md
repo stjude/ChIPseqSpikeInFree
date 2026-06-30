@@ -38,7 +38,7 @@ Using `R`, enter:
 > library(devtools)
 > install_github("stjude/ChIPseqSpikeInFree")
 > packageVersion('ChIPseqSpikeInFree')
-#[1] '1.2.4'
+#[1] '1.2.6'
 ```
 
 Or using command lines
@@ -46,7 +46,7 @@ Or using command lines
 ```bash
 $ git clone https://github.com/stjude/ChIPseqSpikeInFree.git
 $ R CMD build ChIPseqSpikeInFree
-$ R CMD INSTALL ChIPseqSpikeInFree_1.2.4.tar.gz
+$ R CMD INSTALL ChIPseqSpikeInFree_1.2.6.tar.gz
 
 ```
 
@@ -236,6 +236,7 @@ write.table(dat, "sample_SF_completeLoss.txt", sep="\t",quote=F,row.names=F, col
 This repository contains the following:
 - source code
 - documentation [[PDF file](docs/ChIPseqSpikeInFree_1.2.4.pdf)]
+- a shareable Codex skill for AI agents (`skills/chipseqspikeinfree`)
 - chromFile of human and mouse reference genome (`hg19`, `mm9`, `mm10`, and `hg38`)
 - an example of `sample_meta.txt`
 
@@ -275,7 +276,7 @@ attached base packages:
 [8] methods   base
 
 other attached packages:
- [1] ChIPseqSpikeInFree_1.2.4    GenomicAlignments_1.20.1
+ [1] ChIPseqSpikeInFree_1.2.6    GenomicAlignments_1.20.1
  [3] Rsamtools_2.0.3             Biostrings_2.52.0
  [5] XVector_0.24.0              SummarizedExperiment_1.14.1
  [7] DelayedArray_0.10.0         BiocParallel_1.18.1

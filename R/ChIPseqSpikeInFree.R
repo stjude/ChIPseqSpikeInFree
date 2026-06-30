@@ -35,8 +35,14 @@ GenerateBins <- function(chromFile, binSize = 1000, overlap = 0, withChr = TRUE,
       stop(paste0("\nchromFile was not found:", chromFile, "\n"))
     }
   }
-  if (binSize < 200 && binSize > 10000) {
+  if (binSize < 200 || binSize > 10000) {
     stop(paste0("\n**Recommended binSize range 200 ~ 10000 (bp); Your binSize is", binSize, " **\n"))
+  }
+  if (overlap < 0 || overlap >= binSize) {
+    stop("\n**overlap must be non-negative and smaller than binSize.**\n")
+  }
+  if (is.null(minChrSize)){
+	minChrSize <- binSize * 2
   }
   cat(paste0("\n\tFollowing file will be used to generate sliding windows: ", basename(chromFile)))
   chromSize <- read.table(chromFile, sep = "\t", header = F, fill = TRUE, quote = "")
@@ -52,9 +58,6 @@ GenerateBins <- function(chromFile, binSize = 1000, overlap = 0, withChr = TRUE,
   }
   chromSize[, 1] <- chrNotation
   cat(paste0("\n\twarn: exclude small contigs [n=", sum(chromSize[,2] < minChrSize),"]"))
-  if (is.null(minChrSize)){
-	minChrSize <- binSize * 2
-  }
   chromSize <- chromSize[chromSize[,2] >= minChrSize,]
   beds <- NULL
   timeStamp<- strtrim(gsub("[-: ]","",Sys.time()),14) #8,12
@@ -111,7 +114,7 @@ CountRawReads <- function(bamFiles, chromFile = "hg19", prefix = "test", singleE
     stop("Invalid bam file list!")
   }
 
-  if (binSize < 200 && binSize > 10000) {
+  if (binSize < 200 || binSize > 10000) {
     stop(paste0("\n**Recommended binSize range 200 ~ 10000 (bp); Your binsize is", binSize, " **\n"))
   }
   # Function to check chromosome notation in bam file
@@ -221,11 +224,12 @@ ReadMeta <- function(metaFile = "sample_meta.txt") {
   meta <- read.table(metaFile, sep = "\t", header = TRUE, fill = TRUE, stringsAsFactors = FALSE, quote = "", check.names = F)
   colnames(meta) <- toupper(colnames(meta))
   # check duplicate ID
-  if (sum(duplicated(meta$ID)) > 1) {
-    cat("\n**Warning: found duplicate ID(s) in your metaFile.**\n\n")
-    print(unique(meta$ID[duplicated(meta$ID)]))
-    cat("\nPlease correct your metaFile and then re-run the pipeline.\n\n")
-    quit("no")
+  if (any(duplicated(meta$ID))) {
+    stop(paste0(
+      "\n**Error: found duplicate ID(s) in your metaFile:**\n\t",
+      paste(unique(meta$ID[duplicated(meta$ID)]), collapse = ", "),
+      "\nPlease correct your metaFile and then re-run the pipeline.\n"
+    ))
   }
   rownames(meta) <- meta$ID
   if (!"ID" %in% colnames(meta) | !"ANTIBODY" %in% colnames(meta) | !"GROUP" %in% colnames(meta)) {
@@ -365,9 +369,15 @@ ParseReadCounts <- function(data, metaFile = "sample_meta.txt", by = 0.05, prefi
   if (ncores > 1) {
     cat(paste0("\n\tEnabling parallel computing ( ", ncores, " cores)...\n"))
   }
+  cl <- NULL
   tryCatch({
     # Initiate cluster
     cl <- makeCluster(ncores)
+    on.exit({
+      if (!is.null(cl)) {
+        try(stopCluster(cl), silent = TRUE)
+      }
+    }, add = TRUE)
     clusterExport(cl, varlist = c("data"), envir = environment())
     # calculate CPM
     CPM <- parLapply(
@@ -411,6 +421,7 @@ ParseReadCounts <- function(data, metaFile = "sample_meta.txt", by = 0.05, prefi
       function(x) parParseRaw(CPM[, x], SEQ)
     )
     stopCluster(cl)
+    cl <- NULL
     res <- Reduce("cbind", res)
     cat("\nCPM was parsed.\n")
     colnames(res) <- colnames(CPM)
@@ -424,7 +435,7 @@ ParseReadCounts <- function(data, metaFile = "sample_meta.txt", by = 0.05, prefi
     write.table(dat, output, sep = "\t", quote = F, row.names = F, col.names = T)
     cat("\n\t", output, "[saved]")
   },
-  error = function(e) print(e)
+  error = function(e) stop(e)
   )
   return(dat)
 }
@@ -587,8 +598,12 @@ CalculateSF <- function(data, metaFile = "sample_meta.txt",minFirstTurn = "auto"
   meta$SF <- NA
   for (ab in unique(meta$ANTIBODY)) {
     inds <- grep(paste0("^", ab, "$"), meta$ANTIBODY) # grep may cause problem sometime
-    SF <- round(max(meta$SLOPE[inds]) / meta$SLOPE[inds], 2)
-    meta$SF[inds] <- SF
+    passInds <- inds[meta$QC[inds] == "pass"]
+    if (length(passInds) == 0) {
+      next
+    }
+    SF <- round(max(meta$SLOPE[passInds]) / meta$SLOPE[passInds], 2)
+    meta$SF[passInds] <- SF
   }
   meta$SF[meta$SF == 0 ] <- 1  # happened when Xa could equal Xb, only if user manually set maxLastTurn and cutoff_QC inapporiately
   meta$SF[meta$QC != "pass"] <- NA
@@ -986,8 +1001,8 @@ ChIPseqSpikeInFree <- function(bamFiles,
                                ncores = 2
                                ) {
   # perform ChIP-seq spike-free normalization in one step
-  if (binSize < 100 && binSize > 10000) {
-    cat(paste0("\n**recommended binSize range 200~10000 (bp); your binSize is", binSize, " **\n"))
+  if (binSize < 200 || binSize > 10000) {
+    stop(paste0("\n**recommended binSize range 200~10000 (bp); your binSize is", binSize, " **\n"))
   }
   cat("\nstep1. loading metadata file...")
   meta <- ReadMeta(metaFile)
@@ -1024,4 +1039,5 @@ ChIPseqSpikeInFree <- function(bamFiles,
   cat("\nstep6. ploting scaling factors...")
   BoxplotSF(SF, prefix)
   cat("\n\t[--done--]\n")
+  invisible(SF)
 }

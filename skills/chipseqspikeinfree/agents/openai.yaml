@@ -1,0 +1,4 @@
+interface:
+  display_name: "ChIPseqSpikeInFree"
+  short_description: "Maintain and use the ChIP-seq normalization package"
+  default_prompt: "Use $chipseqspikeinfree to review this package and run its focused R tests."

@@ -1,6 +1,6 @@
 Package: ChIPseqSpikeInFree
 Title: A Spike-in Free ChIP-Seq Normalization Approach for Detecting Global Changes in Histone Modifications
-Version: 1.2.4
+Version: 1.2.6
 Date: 2020-08-31
 Authors@R: 
     person(given = "Hongjian",
@@ -15,6 +15,9 @@ Depends:
   R (>= 3.5.0),
   Rsamtools
 License: GPL-3
+Suggests:
+  testthat (>= 3.0.0)
 Encoding: UTF-8
 LazyData: TRUE
 RoxygenNote: 6.1.1
+Config/testthat/edition: 3
