@@ -59,7 +59,7 @@ Equivalent direct command on this Windows environment:
 & 'C:\Users\hjin\AppData\Local\Programs\R\R-4.3.3\bin\x64\Rscript.exe' -e "testthat::test_dir('tests/testthat')"
 ```
 
-Expected current focused-suite result: `FAIL 0`, `WARN 0`, `SKIP 0`, `PASS 17`.
+Expected focused-suite success criterion: `FAIL 0`. Locale warnings may appear on locked-down Windows or network-share environments without indicating package test failure.
 
 ## Release Notes For Agents
 

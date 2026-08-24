@@ -236,7 +236,7 @@ write.table(dat, "sample_SF_completeLoss.txt", sep="\t",quote=F,row.names=F, col
 This repository contains the following:
 - source code
 - documentation [[PDF file](docs/ChIPseqSpikeInFree_1.2.4.pdf)]
-- a shareable Codex skill for AI agents (`skills/chipseqspikeinfree`)
+- a shareable Agent Skills open standard skill for AI agents (`skills/chipseqspikeinfree`)
 - chromFile of human and mouse reference genome (`hg19`, `mm9`, `mm10`, and `hg38`)
 - an example of `sample_meta.txt`
 
