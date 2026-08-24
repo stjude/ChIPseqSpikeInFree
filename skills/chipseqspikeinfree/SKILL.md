@@ -128,7 +128,6 @@ Expected files for `prefix = "test"`:
 
 ## Repository Maintenance
 
-- Read `references/package-workflow.md` for package-specific details, release notes, and Windows Rscript fallback paths.
 - Keep public function signatures stable unless the user explicitly asks for an API change.
 - Prefer focused edits in `R/ChIPseqSpikeInFree.R`; avoid broad style rewrites.
 - Add or update focused tests under `tests/testthat/` for bug fixes.
@@ -139,14 +138,9 @@ Expected files for `prefix = "test"`:
 
 Run the focused suite from the repository root:
 
-```powershell
-powershell -ExecutionPolicy Bypass -File skills\chipseqspikeinfree\scripts\run_tests.ps1
+```bash
+Rscript -e "testthat::test_dir('tests/testthat')"
 ```
 
-Success criterion: `FAIL 0`. Locale warnings can appear on locked-down Windows or network-share environments without indicating package test failure.
+Success criterion: `FAIL 0`. Warnings should be reviewed, but known environment warnings such as locale configuration messages do not necessarily indicate package test failure.
 
-If PowerShell blocks unsigned scripts or `Rscript` is not on PATH on Windows, use the direct Rscript command:
-
-```powershell
-& 'C:\Users\hjin\AppData\Local\Programs\R\R-4.3.3\bin\x64\Rscript.exe' -e "testthat::test_dir('tests/testthat')"
-```
