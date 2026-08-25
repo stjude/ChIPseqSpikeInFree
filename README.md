@@ -4,6 +4,30 @@
 
 A Spike-in Free ChIP-Seq Normalization Approach for Detecting Global Changes in Histone Modifications
 
+## Table of contents
+
+- [Overview](#background)
+  - [Background](#background)
+  - [DNAnexus app](#app-on-dnanexus-cloud-platform---no-installation-click-and-run)
+- [Install and run](#prerequisites)
+  - [Prerequisites](#prerequisites)
+  - [Installation](#installation)
+  - [Usage](#usage)
+  - [Command-line usage](#command-line-usage)
+- [Inputs, outputs, and interpretation](#input)
+  - [Input](#input)
+  - [Output](#output)
+  - [Interpretation of scaling factor table](#interpretation-of-scaling-factor-table)
+  - [How to use ChIPSeqSpikeIn scaling factor](#how-to-use-chipseqspikein-scaling-factor)
+  - [Complete loss handling](#what-happens-if-100-complete-loss-is-expected)
+- [Agent Skill](#agent-skill)
+- [Project information](#notes)
+  - [Notes](#notes)
+  - [Maintainers](#maintainers)
+  - [How to cite](#how-to-cite)
+  - [Contact](#contact)
+
+
 ## Background
 
 Traditional reads per million (RPM) normalization method is inappropriate for the evaluation of ChIP-seq data when the treatment or mutation has the global effect. Changes in global levels of histone modifications can be detected by using exogenous reference spike-in controls. However, most of the ChIP-seq studies have overlooked the normalization problem that have to be corrected with spike-in. A method that retrospectively renormalize data sets without spike-in is lacking. 
@@ -247,12 +271,34 @@ dat$SF <- SF
 write.table(dat, "sample_SF_completeLoss.txt", sep="\t",quote=F,row.names=F, col.names=T)
 ```
 
+## Agent Skill
+
+This repository includes a platform-neutral Agent Skill for AI agents that can run and explain the ChIPseqSpikeInFree command-line workflow.
+
+- Skill directory: [`skills/chipseqspikeinfree`](skills/chipseqspikeinfree)
+- Core agent instructions: [`skills/chipseqspikeinfree/SKILL.md`](skills/chipseqspikeinfree/SKILL.md)
+- Human-readable skill guide: [`skills/chipseqspikeinfree/README.md`](skills/chipseqspikeinfree/README.md)
+- CLI guide used by the skill: [`ChIPseqSpikeInFree_cli_README.md`](ChIPseqSpikeInFree_cli_README.md)
+
+Example agent prompt:
+
+```text
+Use $chipseqspikeinfree.
+My BAM list is <bam-list-file>.
+My metadata file is <metadata-file>.
+Use genome <hg19|hg38|mm9|mm10|chrom-size-file>.
+Write outputs with prefix <output-prefix>.
+Use standard mode.
+```
+
+For replotting, provide the metadata file and an existing output prefix whose `<prefix>_parsedMatrix.txt` file already exists.
+
+
 ## Notes
 
 This repository contains the following:
 - source code
 - documentation [[PDF file](docs/ChIPseqSpikeInFree_1.2.4.pdf)]
-- a shareable Agent Skills open standard skill for AI agents (`skills/chipseqspikeinfree`)
 - chromFile of human and mouse reference genome (`hg19`, `mm9`, `mm10`, and `hg38`)
 - an example of `sample_meta.txt`
 
