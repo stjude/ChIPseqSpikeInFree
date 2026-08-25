@@ -95,6 +95,20 @@ Save as `/your/path/sample_meta.txt` ([Example](docs/sample_meta.txt))
 > ChIPseqSpikeInFree(bamFiles = bams, chromFile = "hg19", metaFile = metaFile, prefix = "test", cutoff_QC = 1, maxLastTurn=0.97)
 ```
 
+### Command-line usage
+
+The package also includes a command-line wrapper at `inst/scripts/run_ChIPseqSpikeInFree.R` for running the workflow from a shell.
+
+```bash
+Rscript inst/scripts/run_ChIPseqSpikeInFree.R \
+  -L bam.lst \
+  -G hg19 \
+  -m sample_meta.txt \
+  -o test
+```
+
+The CLI supports standard mode and replotting mode. See [ChIPseqSpikeInFree_cli_README.md](ChIPseqSpikeInFree_cli_README.md) for input formats, options, expected outputs, resume behavior, and CLI-specific notes.
+
 ### Input
 
 In the simple usage scenario, the user should have ChIP-seq bam files ready. Sample information can be specified in a metadata file (`metaFile`) and the user should choose a correct reference genome corresponding to the bams.
