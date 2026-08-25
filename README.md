@@ -1,3 +1,5 @@
+<h1><img src="docs/logo_small.png" alt="ChIPseqSpikeInFree Logo" width="200" style="vertical-align: middle; margin-right: 10px;" />ChIPseqSpikeInFree</h1>
+
 ## ChIPseqSpikeInFree
 
 A Spike-in Free ChIP-Seq Normalization Approach for Detecting Global Changes in Histone Modifications
