@@ -1,7 +1,5 @@
 <h1><img src="docs/logo_small.png" alt="ChIPseqSpikeInFree Logo" width="200" style="vertical-align: middle; margin-right: 10px;" />ChIPseqSpikeInFree</h1>
 
-## ChIPseqSpikeInFree
-
 A Spike-in Free ChIP-Seq Normalization Approach for Detecting Global Changes in Histone Modifications
 
 ## Table of contents
@@ -363,6 +361,7 @@ loaded via a namespace (and not attached):
 [4] zlibbioc_1.30.0        Matrix_1.2-17          tools_3.6.1
 [7] RCurl_1.95-4.12        compiler_3.6.1         GenomeInfoDbData_1.2.1
 ```
+
 
 
 
