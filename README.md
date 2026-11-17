@@ -14,6 +14,7 @@ A Spike-in Free ChIP-Seq Normalization Approach for Detecting Global Changes in 
   - [Installation](#installation)
   - [Usage](#usage)
   - [Command-line usage](#command-line-usage)
+  - [Nextflow pipeline](#nextflow-pipeline)
 - [Inputs, outputs, and interpretation](#input)
   - [Input](#input)
   - [Output](#output)
@@ -134,6 +135,13 @@ Rscript inst/scripts/run_ChIPseqSpikeInFree.R \
 ```
 
 The CLI supports standard mode and replotting mode. See [ChIPseqSpikeInFree_cli_README.md](ChIPseqSpikeInFree_cli_README.md) for input formats, options, expected outputs, resume behavior, and CLI-specific notes.
+### Nextflow pipeline
+
+For reproducible, scalable execution, ChIPseqSpikeInFree is also available as an [nf-core-format Nextflow pipeline](https://github.com/hongjianjin/ChIPseqSpikeInFree-nf).
+
+The pipeline counts reads **per BAM file in parallel**. Each BAM counting task can run independently, so Nextflow can schedule multiple samples concurrently according to the compute resources available. This improves throughput for multi-sample runs while keeping each BAM's counting work isolated.
+
+See the [ChIPseqSpikeInFree-nf repository](https://github.com/hongjianjin/ChIPseqSpikeInFree-nf) for installation, input preparation, configuration, and execution instructions.
 
 ### Input
 
@@ -352,3 +360,4 @@ loaded via a namespace (and not attached):
 [4] zlibbioc_1.30.0        Matrix_1.2-17          tools_3.6.1
 [7] RCurl_1.95-4.12        compiler_3.6.1         GenomeInfoDbData_1.2.1
 ```
+
