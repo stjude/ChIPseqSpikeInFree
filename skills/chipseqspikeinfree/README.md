@@ -86,7 +86,9 @@ You can also run the ChIPseqSpikeInFree CLI directly without going through an ag
 Standard mode example:
 
 ```bash
-Rscript inst/scripts/run_ChIPseqSpikeInFree.R \
+CSF_SCRIPT=$(Rscript -e 'cat(system.file("scripts/run_ChIPseqSpikeInFree.R", package="ChIPseqSpikeInFree"))')
+printf 'Using: %s\n' "$CSF_SCRIPT"
+Rscript "$CSF_SCRIPT" \
   -L /path/to/bam.lst \
   -G hg19 \
   -m /path/to/sample_meta.txt \
@@ -96,7 +98,9 @@ Rscript inst/scripts/run_ChIPseqSpikeInFree.R \
 Standard mode with broad-mark settings:
 
 ```bash
-Rscript inst/scripts/run_ChIPseqSpikeInFree.R \
+CSF_SCRIPT=$(Rscript -e 'cat(system.file("scripts/run_ChIPseqSpikeInFree.R", package="ChIPseqSpikeInFree"))')
+printf 'Using: %s\n' "$CSF_SCRIPT"
+Rscript "$CSF_SCRIPT" \
   -L /path/to/bam.lst \
   -G hg19 \
   -m /path/to/sample_meta.txt \
@@ -108,7 +112,9 @@ Rscript inst/scripts/run_ChIPseqSpikeInFree.R \
 Paired-end standard mode:
 
 ```bash
-Rscript inst/scripts/run_ChIPseqSpikeInFree.R \
+CSF_SCRIPT=$(Rscript -e 'cat(system.file("scripts/run_ChIPseqSpikeInFree.R", package="ChIPseqSpikeInFree"))')
+printf 'Using: %s\n' "$CSF_SCRIPT"
+Rscript "$CSF_SCRIPT" \
   -L /path/to/bam.lst \
   -G hg19 \
   -m /path/to/sample_meta.txt \
@@ -119,7 +125,9 @@ Rscript inst/scripts/run_ChIPseqSpikeInFree.R \
 Replotting mode example:
 
 ```bash
-Rscript inst/scripts/run_ChIPseqSpikeInFree.R \
+CSF_SCRIPT=$(Rscript -e 'cat(system.file("scripts/run_ChIPseqSpikeInFree.R", package="ChIPseqSpikeInFree"))')
+printf 'Using: %s\n' "$CSF_SCRIPT"
+Rscript "$CSF_SCRIPT" \
   -m /path/to/sample_meta.txt \
   -o /path/to/results/test \
   -r TRUE
@@ -128,7 +136,9 @@ Rscript inst/scripts/run_ChIPseqSpikeInFree.R \
 Replotting mode with a custom x-axis maximum:
 
 ```bash
-Rscript inst/scripts/run_ChIPseqSpikeInFree.R \
+CSF_SCRIPT=$(Rscript -e 'cat(system.file("scripts/run_ChIPseqSpikeInFree.R", package="ChIPseqSpikeInFree"))')
+printf 'Using: %s\n' "$CSF_SCRIPT"
+Rscript "$CSF_SCRIPT" \
   -m /path/to/sample_meta.txt \
   -o /path/to/results/test \
   -x 10 \
@@ -215,3 +225,6 @@ Related package files:
 - [`../../ChIPseqSpikeInFree_cli_README.md`](../../ChIPseqSpikeInFree_cli_README.md): detailed CLI documentation
 - [`../../inst/scripts/run_ChIPseqSpikeInFree.R`](../../inst/scripts/run_ChIPseqSpikeInFree.R): command-line wrapper
 - [`../../README.md`](../../README.md): main package README
+
+
+

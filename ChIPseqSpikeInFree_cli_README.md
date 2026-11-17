@@ -76,7 +76,9 @@ Standard mode requires:
 Example:
 
 ```bash
-Rscript inst/scripts/run_ChIPseqSpikeInFree.R \
+CSF_SCRIPT=$(Rscript -e 'cat(system.file("scripts/run_ChIPseqSpikeInFree.R", package="ChIPseqSpikeInFree"))')
+printf 'Using: %s\n' "$CSF_SCRIPT"
+Rscript "$CSF_SCRIPT" \
   -L bam.lst \
   -G hg19 \
   -m sample_meta.txt \
@@ -86,7 +88,9 @@ Rscript inst/scripts/run_ChIPseqSpikeInFree.R \
 Example for a mark such as H3K9me3, where a lower QC cutoff and lower `maxLastTurn` may be useful:
 
 ```bash
-Rscript inst/scripts/run_ChIPseqSpikeInFree.R \
+CSF_SCRIPT=$(Rscript -e 'cat(system.file("scripts/run_ChIPseqSpikeInFree.R", package="ChIPseqSpikeInFree"))')
+printf 'Using: %s\n' "$CSF_SCRIPT"
+Rscript "$CSF_SCRIPT" \
   -L bam.lst \
   -G hg19 \
   -m sample_meta.txt \
@@ -108,7 +112,9 @@ It recalculates scaling factors and writes outputs with a `_replot` suffix. Read
 Example:
 
 ```bash
-Rscript inst/scripts/run_ChIPseqSpikeInFree.R \
+CSF_SCRIPT=$(Rscript -e 'cat(system.file("scripts/run_ChIPseqSpikeInFree.R", package="ChIPseqSpikeInFree"))')
+printf 'Using: %s\n' "$CSF_SCRIPT"
+Rscript "$CSF_SCRIPT" \
   -m sample_meta.txt \
   -o test \
   -r TRUE
@@ -117,7 +123,9 @@ Rscript inst/scripts/run_ChIPseqSpikeInFree.R \
 Example with a custom x-axis maximum for the distribution plot:
 
 ```bash
-Rscript inst/scripts/run_ChIPseqSpikeInFree.R \
+CSF_SCRIPT=$(Rscript -e 'cat(system.file("scripts/run_ChIPseqSpikeInFree.R", package="ChIPseqSpikeInFree"))')
+printf 'Using: %s\n' "$CSF_SCRIPT"
+Rscript "$CSF_SCRIPT" \
   -m sample_meta.txt \
   -o test \
   -x 10 \
@@ -198,5 +206,8 @@ Success criterion:
 ```text
 FAIL 0
 ```
+
+
+
 
 

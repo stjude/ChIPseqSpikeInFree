@@ -13,14 +13,14 @@ A Spike-in Free ChIP-Seq Normalization Approach for Detecting Global Changes in 
   - [Prerequisites](#prerequisites)
   - [Installation](#installation)
   - [Usage](#usage)
-  - [Command-line usage](#command-line-usage)
-  - [Nextflow pipeline](#nextflow-pipeline)
 - [Inputs, outputs, and interpretation](#input)
   - [Input](#input)
   - [Output](#output)
   - [Interpretation of scaling factor table](#interpretation-of-scaling-factor-table)
   - [How to use ChIPSeqSpikeIn scaling factor](#how-to-use-chipseqspikein-scaling-factor)
   - [Complete loss handling](#what-happens-if-100-complete-loss-is-expected)
+- [Command-line usage](#command-line-usage)
+- [Nextflow pipeline](#nextflow-pipeline)
 - [Agent Skill](#agent-skill)
 - [Project information](#notes)
   - [Notes](#notes)
@@ -121,27 +121,6 @@ Save as `/your/path/sample_meta.txt` ([Example](docs/sample_meta.txt))
 ```R
 > ChIPseqSpikeInFree(bamFiles = bams, chromFile = "hg19", metaFile = metaFile, prefix = "test", cutoff_QC = 1, maxLastTurn=0.97)
 ```
-
-### Command-line usage
-
-The package also includes a command-line wrapper at `inst/scripts/run_ChIPseqSpikeInFree.R` for running the workflow from a shell.
-
-```bash
-Rscript inst/scripts/run_ChIPseqSpikeInFree.R \
-  -L bam.lst \
-  -G hg19 \
-  -m sample_meta.txt \
-  -o test
-```
-
-The CLI supports standard mode and replotting mode. See [ChIPseqSpikeInFree_cli_README.md](ChIPseqSpikeInFree_cli_README.md) for input formats, options, expected outputs, resume behavior, and CLI-specific notes.
-### Nextflow pipeline
-
-For reproducible, scalable execution, ChIPseqSpikeInFree is also available as an [nf-core-format Nextflow pipeline](https://github.com/hongjianjin/ChIPseqSpikeInFree-nf).
-
-The pipeline counts reads **per BAM file in parallel**. Each BAM counting task can run independently, so Nextflow can schedule multiple samples concurrently according to the compute resources available. This improves throughput for multi-sample runs while keeping each BAM's counting work isolated.
-
-See the [ChIPseqSpikeInFree-nf repository](https://github.com/hongjianjin/ChIPseqSpikeInFree-nf) for installation, input preparation, configuration, and execution instructions.
 
 ### Input
 
@@ -279,6 +258,30 @@ dat$SF <- SF
 write.table(dat, "sample_SF_completeLoss.txt", sep="\t",quote=F,row.names=F, col.names=T)
 ```
 
+## Command-line usage
+
+The package also includes a command-line wrapper at `inst/scripts/run_ChIPseqSpikeInFree.R` for running the workflow from a shell.
+
+```bash
+CSF_SCRIPT=$(Rscript -e 'cat(system.file("scripts/run_ChIPseqSpikeInFree.R", package="ChIPseqSpikeInFree"))')
+printf 'Using: %s\n' "$CSF_SCRIPT"
+Rscript "$CSF_SCRIPT" \
+  -L bam.lst \
+  -G hg19 \
+  -m sample_meta.txt \
+  -o test
+```
+
+The CLI supports standard mode and replotting mode. See [ChIPseqSpikeInFree_cli_README.md](ChIPseqSpikeInFree_cli_README.md) for input formats, options, expected outputs, resume behavior, and CLI-specific notes.
+
+## Nextflow pipeline
+
+For reproducible, scalable execution, ChIPseqSpikeInFree is also available as an [nf-core-format Nextflow pipeline](https://github.com/hongjianjin/ChIPseqSpikeInFree-nf).
+
+The pipeline counts reads **per BAM file in parallel**. Each BAM counting task can run independently, so Nextflow can schedule multiple samples concurrently according to the compute resources available. This improves throughput for multi-sample runs while keeping each BAM's counting work isolated.
+
+See the [ChIPseqSpikeInFree-nf repository](https://github.com/hongjianjin/ChIPseqSpikeInFree-nf) for installation, input preparation, configuration, and execution instructions.
+
 ## Agent Skill
 
 This repository includes a platform-neutral Agent Skill for AI agents that can run and explain the ChIPseqSpikeInFree command-line workflow.
@@ -360,4 +363,8 @@ loaded via a namespace (and not attached):
 [4] zlibbioc_1.30.0        Matrix_1.2-17          tools_3.6.1
 [7] RCurl_1.95-4.12        compiler_3.6.1         GenomeInfoDbData_1.2.1
 ```
+
+
+
+
 

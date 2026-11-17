@@ -47,7 +47,9 @@ The agent should:
 Prefer the CLI wrapper documented in `ChIPseqSpikeInFree_cli_README.md`:
 
 ```bash
-Rscript inst/scripts/run_ChIPseqSpikeInFree.R \
+CSF_SCRIPT=$(Rscript -e 'cat(system.file("scripts/run_ChIPseqSpikeInFree.R", package="ChIPseqSpikeInFree"))')
+printf 'Using: %s\n' "$CSF_SCRIPT"
+Rscript "$CSF_SCRIPT" \
   -L /absolute/path/bam.lst \
   -G hg19 \
   -m /absolute/path/sample_meta.txt \
@@ -70,7 +72,9 @@ Required inputs:
 Standard-mode command template:
 
 ```bash
-Rscript inst/scripts/run_ChIPseqSpikeInFree.R \
+CSF_SCRIPT=$(Rscript -e 'cat(system.file("scripts/run_ChIPseqSpikeInFree.R", package="ChIPseqSpikeInFree"))')
+printf 'Using: %s\n' "$CSF_SCRIPT"
+Rscript "$CSF_SCRIPT" \
   -L <bamList> \
   -G <genome-or-chrom-size-file> \
   -m <metadata-file> \
@@ -90,7 +94,9 @@ Required inputs:
 Replotting command template:
 
 ```bash
-Rscript inst/scripts/run_ChIPseqSpikeInFree.R \
+CSF_SCRIPT=$(Rscript -e 'cat(system.file("scripts/run_ChIPseqSpikeInFree.R", package="ChIPseqSpikeInFree"))')
+printf 'Using: %s\n' "$CSF_SCRIPT"
+Rscript "$CSF_SCRIPT" \
   -m <metadata-file> \
   -o <output-prefix> \
   -r TRUE
@@ -248,3 +254,6 @@ Rscript -e "testthat::test_dir('tests/testthat')"
 ```
 
 Success criterion: `FAIL 0`. Review warnings, but known locale warnings from constrained environments do not necessarily indicate workflow failure.
+
+
+
